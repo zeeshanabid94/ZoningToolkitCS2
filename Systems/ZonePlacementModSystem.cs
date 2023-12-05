@@ -12,25 +12,14 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 using BuildOrder = Game.Zones.BuildOrder;
-// using HookUILib.Core;
 
 namespace ZonePlacementMod.Systems
 {
-    // public class ZonePlacementModUI : UIExtension {
-    //     public new readonly ExtensionType extensionType = ExtensionType.Panel;
-    //     public new readonly string extensionID = "zoning-adjuster";
-    //     public new readonly string extensionContent;
-        
-    //     public ZonePlacementModUI() {
-    //         extensionContent = LoadEmbeddedResource("ZoningAdjuster.ui-src.helloworld.transpiled.js");
-    //     }
-    // }
-
     [UpdateAfter(typeof(CellCheckSystem))]
     [UpdateAfter(typeof(BlockSystem))]
     [UpdateAfter(typeof(BlockReferencesSystem))]
     public class EnableZoneSystem: GameSystemBase {
-        private enum ZoningMode {
+        public enum ZoningMode {
             LeftOnly,
             RightOnly,
             Default,

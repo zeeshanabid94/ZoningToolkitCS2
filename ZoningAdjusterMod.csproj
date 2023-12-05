@@ -72,9 +72,9 @@
 	</ItemGroup>
 
 	<!-- Hook UI -->
-	<!-- <ItemGroup>
-		<PackageReference Include="HookUILib" Version="0.1.0" />
-	</ItemGroup> -->
+	<ItemGroup>
+		<Reference Include="libs/HookUILib.dll" />
+	</ItemGroup>
 
 	<!-- Set the default value for BepInExVersion -->
 	<PropertyGroup>
@@ -83,7 +83,7 @@
 
 	<!-- UI for the mod embedded into the Mod -->
 	<ItemGroup>
-    	<EmbeddedResource Include="ui-src/helloworld.transpiled.js" />
+    	<EmbeddedResource Include="ui_src/build/helloworld.transpiled.js" />
 	</ItemGroup>
 
 	<!--
@@ -115,5 +115,11 @@
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(CI)' != 'true'">
 		<Exec
 			Command="if not exist &quot;$(Cities2_Location)\BepInEx\plugins\$(ProjectName)&quot; mkdir &quot;$(Cities2_Location)\BepInEx\plugins\$(ProjectName)&quot;&#xD;&#xA;copy /Y &quot;$(TargetDir)0Harmony.dll&quot; &quot;$(Cities2_Location)\BepInEx\plugins\$(ProjectName)\0Harmony.dll&quot;&#xD;&#xA;copy /Y &quot;$(TargetDir)$(ProjectName).dll&quot; &quot;$(Cities2_Location)\BepInEx\plugins\$(ProjectName)\$(ProjectName).dll&quot;" />
+	</Target>
+
+	<!-- This will build the React UI before building the Mod -->
+	<Target Name="PreBuild" BeforeTargets="PreBuildEvent" Condition="'$(CI)' != 'true'">
+		<Exec
+			Command="cd ui_src &amp;npm run build" />
 	</Target>
 </Project>

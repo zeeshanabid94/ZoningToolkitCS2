@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using ZoningAdjusterMod;
+using HookUILib.Core;
 
 #if BEPINEX_V6
     using BepInEx.Unity.Mono;
@@ -16,6 +17,16 @@ using ZoningAdjusterMod;
 
 namespace ZoningAdjusterModPlugin
 {
+    public class ZonePlacementModUI : UIExtension {
+        public new readonly ExtensionType extensionType = ExtensionType.Panel;
+        public new readonly string extensionID = "zoning.adjuster";
+        public new readonly string extensionContent;
+        
+        public ZonePlacementModUI() {
+            extensionContent = LoadEmbeddedResource("ZoningAdjusterMod.ui_src.build.helloworld.transpiled.js");
+        }
+    }
+
     [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
     public class Plugin : BaseUnityPlugin
     {
