@@ -8,6 +8,9 @@ using HarmonyLib;
 using System.Reflection.Emit;
 using Game;
 using MyCoolMod.Systems;
+using Game.Common;
+using ZonePlacementMod.Systems;
+using Game.Zones;
 
 namespace MyCoolMod.Patches {
 
@@ -40,4 +43,15 @@ namespace MyCoolMod.Patches {
     }
     // Thanks to @89pleasure for the MenuUISystem_IsEditorEnabledPatch snippet above
     // https://github.com/89pleasure/cities2-mod-collection/blob/71385c000779c23b85e5cc023fd36022a06e9916/EditorEnabled/Patches/MenuUISystemPatches.cs
+
+    [HarmonyPatch(typeof(SystemOrder))]
+    public static class SystemOrderPatch {
+        [HarmonyPatch("Initialize")]
+        [HarmonyPostfix]
+        public static void Postfix(UpdateSystem updateSystem) {
+            // Add our defined VehicleCounterSystem to the update system which makes it part of
+            // the game loop. Make sure it runs at the Phase `PostSimulation`
+            updateSystem.UpdateAt<EnableZoneSystem>(SystemUpdatePhase.ModificationEnd);
+        }
+    }
 }

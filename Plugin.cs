@@ -8,12 +8,13 @@ using HarmonyLib;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using ZoningAdjusterMod;
 
 #if BEPINEX_V6
     using BepInEx.Unity.Mono;
 #endif
 
-namespace MyCoolMod
+namespace ZoningAdjusterModPlugin
 {
     [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
     public class Plugin : BaseUnityPlugin

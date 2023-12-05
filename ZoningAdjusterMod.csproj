@@ -9,9 +9,9 @@
 
 	<PropertyGroup>
 		<TargetFramework>netstandard2.1</TargetFramework>
-		<AssemblyName>MyCoolMod</AssemblyName>
-		<RootNamespace>MyCoolMod</RootNamespace>
-		<Description>A mod that I made for Cities: Skylines 2</Description>
+		<AssemblyName>ZoningAdjusterMod</AssemblyName>
+		<RootNamespace>ZoningAdjusterMod</RootNamespace>
+		<Description>A mod to adjust zoning in CS 2</Description>
 		<Version>0.1.0</Version>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
@@ -71,10 +71,20 @@
 		<PackageReference Include="UnityEngine.Modules" Version="2022.3.7" IncludeAssets="compile" />
 	</ItemGroup>
 
+	<!-- Hook UI -->
+	<!-- <ItemGroup>
+		<PackageReference Include="HookUILib" Version="0.1.0" />
+	</ItemGroup> -->
+
 	<!-- Set the default value for BepInExVersion -->
 	<PropertyGroup>
 		<BepInExVersion Condition="'$(BepInExVersion)' == ''">5</BepInExVersion>
 	</PropertyGroup>
+
+	<!-- UI for the mod embedded into the Mod -->
+	<ItemGroup>
+    	<EmbeddedResource Include="ui-src/helloworld.transpiled.js" />
+	</ItemGroup>
 
 	<!--
 		These ItemGroups and PropertyGroups gives you compatibility with both BepInEx 5 and 6.
