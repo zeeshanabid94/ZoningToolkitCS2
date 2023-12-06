@@ -18,9 +18,10 @@ namespace ZonePlacementMod.Systems
     [UpdateAfter(typeof(CellCheckSystem))]
     [UpdateAfter(typeof(BlockSystem))]
     [UpdateAfter(typeof(BlockReferencesSystem))]
+    [UpdateAfter(typeof(Game.Zones.SearchSystem))]
+    [UpdateAfter(typeof(Game.Zones.UpdateCollectSystem))]
     public class EnableZoneSystem: GameSystemBase {
-        private EntityQuery createdEntityQuery;
-        private EntityQuery roadQuery;
+        // private EntityQuery createdEntityQuery;
 
         private EntityQuery updatedEntityQuery;
         ComponentTypeHandle<Block> blockComponentTypeHandle;
@@ -42,38 +43,16 @@ namespace ZonePlacementMod.Systems
         protected override void OnCreate() {
             base.OnCreate();
 
-            this.roadQuery = this.GetEntityQuery(new EntityQueryDesc() {
-                All = [
-                    ComponentType.ReadOnly<Curve>(),
-                    ComponentType.ReadOnly<SubBlock>(),
-                    ComponentType.ReadOnly<Road>(),
-                ],
-                Any = [
-                    ComponentType.ReadOnly<Updated>(),
-                    ComponentType.ReadOnly<Applied>(),
-                    ComponentType.ReadOnly<Created>()
-                ]
-            });
-
             this.updatedEntityQuery = this.GetEntityQuery(new EntityQueryDesc() {
                 All = [
                     ComponentType.ReadOnly<Block>(),
                     ComponentType.ReadOnly<ValidArea>(),
-                    ComponentType.ReadWrite<Cell>()
+                    ComponentType.ReadWrite<Cell>(),
+                    ComponentType.ReadWrite<Owner>()
                 ],
                 Any = [
                     ComponentType.ReadOnly<Updated>(),
-                    ComponentType.ReadOnly<Applied>()
-                ]
-            });
-
-            this.createdEntityQuery = this.GetEntityQuery(new EntityQueryDesc() {
-                All = [
-                    ComponentType.ReadOnly<Block>(),
-                    ComponentType.ReadOnly<ValidArea>(),
-                    ComponentType.ReadWrite<Cell>()
-                ],
-                Any = [
+                    ComponentType.ReadOnly<Applied>(),
                     ComponentType.ReadOnly<Created>()
                 ]
             });
@@ -91,7 +70,7 @@ namespace ZonePlacementMod.Systems
             this.entityTypeHandle = this.GetEntityTypeHandle();
             setZoningMode("Default");
             this.RequireForUpdate(this.updatedEntityQuery);
-            this.RequireForUpdate(this.createdEntityQuery);
+            // this.RequireForUpdate(this.createdEntityQuery);
         }
         
         [UnityEngine.Scripting.Preserve]
@@ -131,29 +110,30 @@ namespace ZonePlacementMod.Systems
 
             updatedEntities.Dispose();
 
-            NativeArray<Entity> createdEntities = this.updatedEntityQuery.ToEntityArray(Allocator.Temp);
+            // NativeArray<Entity> createdEntities = this.updatedEntityQuery.ToEntityArray(Allocator.Temp);
 
-            for (int i = 0; i < createdEntities.Length; i++) {
-                Entity entity = createdEntities[i];
-                ZoningInfo entityZoningInfo = new ZoningInfo() {
-                    zoningMode = this.zoningMode
-                };
+            // for (int i = 0; i < createdEntities.Length; i++) {
+            //     Entity entity = createdEntities[i];
+            //     ZoningInfo entityZoningInfo = new ZoningInfo() {
+            //         zoningMode = this.zoningMode
+            //     };
 
-                EntityManager.GetChunk(entity).Archetype.GetComponentTypes().ForEach(componentType => {
-                    Console.WriteLine($"Entity has following component: ${componentType.GetManagedType()}");
-                });
+            //     EntityManager.GetChunk(entity).Archetype.GetComponentTypes().ForEach(componentType => {
+            //         Console.WriteLine($"Entity has following component: ${componentType.GetManagedType()}");
+            //     });
 
-                if (this.ownerComponentLookup.HasComponent(entity)) {
-                    Owner owner = this.ownerComponentLookup[entity];
-                    EntityManager.GetChunk(owner.m_Owner).Archetype.GetComponentTypes().ForEach(componentType => {
-                        Console.WriteLine($"Owner Entity has following components: ${componentType.GetManagedType()}");
-                    });
-                }
-            }
+            //     if (this.ownerComponentLookup.HasComponent(entity)) {
+            //         Owner owner = this.ownerComponentLookup[entity];
+            //         EntityManager.GetChunk(owner.m_Owner).Archetype.GetComponentTypes().ForEach(componentType => {
+            //             Console.WriteLine($"Owner Entity has following components: ${componentType.GetManagedType()}");
+            //         });
+            //     }
+            // }
 
-            createdEntities.Dispose();
+            // createdEntities.Dispose();
 
             JobHandle allJobs = this.Dependency;
+            EntityCommandBuffer entityCommandBuffer = this.modificationEndBarrier.CreateCommandBuffer();
 
             JobHandle updateJobHandle = new UpdateZoneData() {
                 appliedComponentLookup = this.appliedComponentLookup,
@@ -161,7 +141,7 @@ namespace ZonePlacementMod.Systems
                 cellBufferTypeHandle = this.cellBufferTypeHandle,
                 createComponentLookup = this.createComponentLookup,
                 curveComponentLookup = this.curveComponentLookup,
-                entityCommandBuffer = this.modificationEndBarrier.CreateCommandBuffer(),
+                entityCommandBuffer = entityCommandBuffer,
                 entityTypeHandle = this.entityTypeHandle,
                 ownerComponentLookup = this.ownerComponentLookup,
                 updatedComponentLookup = this.updatedComponentLookup,
@@ -172,22 +152,22 @@ namespace ZonePlacementMod.Systems
 
             allJobs = JobHandle.CombineDependencies(updateJobHandle, allJobs);
 
-            JobHandle createdJobHandle = new UpdateZoneData() {
-                appliedComponentLookup = this.appliedComponentLookup,
-                blockComponentTypeHandle = this.blockComponentTypeHandle,
-                cellBufferTypeHandle = this.cellBufferTypeHandle,
-                createComponentLookup = this.createComponentLookup,
-                curveComponentLookup = this.curveComponentLookup,
-                entityCommandBuffer = this.modificationEndBarrier.CreateCommandBuffer(),
-                entityTypeHandle = this.entityTypeHandle,
-                ownerComponentLookup = this.ownerComponentLookup,
-                updatedComponentLookup = this.updatedComponentLookup,
-                validAreaTypeHandle = this.validAreaTypeHandle,
-                zoningMode = this.zoningMode,
-                zoningInfoComponentLookup = this.zoningInfoComponentLookup
-            }.Schedule(this.createdEntityQuery, allJobs);
+            // JobHandle createdJobHandle = new UpdateZoneData() {
+            //     appliedComponentLookup = this.appliedComponentLookup,
+            //     blockComponentTypeHandle = this.blockComponentTypeHandle,
+            //     cellBufferTypeHandle = this.cellBufferTypeHandle,
+            //     createComponentLookup = this.createComponentLookup,
+            //     curveComponentLookup = this.curveComponentLookup,
+            //     entityCommandBuffer = entityCommandBuffer,
+            //     entityTypeHandle = this.entityTypeHandle,
+            //     ownerComponentLookup = this.ownerComponentLookup,
+            //     updatedComponentLookup = this.updatedComponentLookup,
+            //     validAreaTypeHandle = this.validAreaTypeHandle,
+            //     zoningMode = this.zoningMode,
+            //     zoningInfoComponentLookup = this.zoningInfoComponentLookup
+            // }.Schedule(this.createdEntityQuery, allJobs);
 
-            allJobs = JobHandle.CombineDependencies(createdJobHandle, allJobs);
+            // allJobs = JobHandle.CombineDependencies(createdJobHandle, allJobs);
 
             this.modificationEndBarrier.AddJobHandleForProducer(allJobs);
 
@@ -250,7 +230,7 @@ namespace ZonePlacementMod.Systems
                     zoningMode = this.zoningMode
                 };
 
-                for (int i = 0; i < entities.Length; i++) {
+                for (int i = 0; i < blocks.Length; i++) {
                     Entity entity = entities[i];
                     if (this.ownerComponentLookup.HasComponent(entity)) {
                         Owner owner = this.ownerComponentLookup[entity];
@@ -261,21 +241,17 @@ namespace ZonePlacementMod.Systems
                             // If the current was just created and used with a tool
                             // denoted by the apply component
                             if (this.appliedComponentLookup.HasComponent(owner.m_Owner)) {
-                                if (this.zoningInfoComponentLookup.HasComponent(owner.m_Owner)) {
-                                    Console.WriteLine($"Setting zoning info ${entityZoningInfo}");
-                                    entityCommandBuffer.SetComponent(owner.m_Owner, entityZoningInfo);
+                                if (this.zoningInfoComponentLookup.HasComponent(entity)) {
+                                    entityCommandBuffer.SetComponent(entity, entityZoningInfo);
                                 } else {
                                     Console.WriteLine($"Adding & Setting zoning info ${entityZoningInfo}");
-                                    entityCommandBuffer.AddComponent(owner.m_Owner, ComponentType.ReadWrite<ZoningInfo>());
-                                    entityCommandBuffer.SetComponent(owner.m_Owner, entityZoningInfo);
+                                    entityCommandBuffer.AddComponent(entity, ComponentType.ReadWrite<ZoningInfo>());
+                                    entityCommandBuffer.SetComponent(entity, entityZoningInfo);
                                 }
                             } else {
-                                if (this.zoningInfoComponentLookup.HasComponent(owner.m_Owner)) {
+                                if (this.zoningInfoComponentLookup.HasComponent(entity)) {
                                     Console.WriteLine($"Getting zoning info ${entityZoningInfo}");
-                                    entityZoningInfo = this.zoningInfoComponentLookup[owner.m_Owner];
-                                } else {
-                                    // Don't do anything and continue
-                                    continue;
+                                    entityZoningInfo = this.zoningInfoComponentLookup[entity];
                                 }
                             }
 
