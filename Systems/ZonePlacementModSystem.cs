@@ -35,8 +35,8 @@ namespace ZonePlacementMod.Systems
         private ComponentLookup<Curve> curveComponentLookup;
         private ComponentLookup<Created> createComponentLookup;
         private ComponentLookup<Updated> updatedComponentLookup;
-        private ComponentLookup<Game.Zones.BuildOrder> buildOrderLookup;
-        private ZoningMode zoningMode;
+        private ComponentLookup<Applied> appliedComponentLookup;
+        public ZoningMode zoningMode;
 
         protected override void OnCreate() {
             base.OnCreate();
@@ -59,8 +59,8 @@ namespace ZonePlacementMod.Systems
             this.curveComponentLookup = this.GetComponentLookup<Curve>();
             this.createComponentLookup = this.GetComponentLookup<Created>();
             this.updatedComponentLookup = this.GetComponentLookup<Updated>();
-            this.buildOrderLookup = this.GetComponentLookup<BuildOrder>();
-            this.zoningMode = ZoningMode.RightOnly;
+            this.appliedComponentLookup = this.GetComponentLookup<Applied>();
+            setZoningMode("Default");
             this.RequireForUpdate(this.entityQuery);
         }
         
@@ -75,12 +75,13 @@ namespace ZonePlacementMod.Systems
             this.curveComponentLookup.Update(ref this.CheckedStateRef);
             this.updatedComponentLookup.Update(ref this.CheckedStateRef);
             this.createComponentLookup.Update(ref this.CheckedStateRef);
-            this.buildOrderLookup.Update(ref this.CheckedStateRef);
+            this.appliedComponentLookup.Update(ref this.CheckedStateRef);
 
             NativeArray<Entity> entities = this.entityQuery.ToEntityArray(Allocator.Temp);
 
             NativeList<Entity> updatedEntities = new NativeList<Entity>(Allocator.Temp);
             NativeList<Entity> createdEntities = new NativeList<Entity>(Allocator.Temp);
+            NativeList<Entity> appliedEntities = new NativeList<Entity>(Allocator.Temp);
             // NativeArray<Entity> createdAndUpdatedEntities = new NativeArray<Entity>();
 
             for (int i = 0; i < entities.Length; i++) {
@@ -111,7 +112,7 @@ namespace ZonePlacementMod.Systems
                 if (this.ownerComponentLookup.HasComponent(entity)) {
                     Owner owner = this.ownerComponentLookup[entity];
                     EntityManager.GetChunk(owner.m_Owner).Archetype.GetComponentTypes().ForEach(componentType => {
-                        Console.WriteLine($"Entity has following components: ${componentType.GetManagedType()}");
+                        Console.WriteLine($"Owner Entity has following components: ${componentType.GetManagedType()}");
                     });
 
                     if (this.curveComponentLookup.HasComponent(owner.m_Owner)) {
@@ -119,15 +120,14 @@ namespace ZonePlacementMod.Systems
 
                         if (this.validAreaLookup.HasComponent(entity) 
                             && this.blockComponentLookup.HasComponent(entity)
-                            && this.buildOrderLookup.HasComponent(entity)) {
+                            && this.appliedComponentLookup.HasComponent(owner.m_Owner)) {
                             Console.WriteLine($"Entity is {entity}.");
                             EntityManager.GetChunk(entity).Archetype.GetComponentTypes().ForEach(componentType => {
-                                Console.WriteLine($"Entity has following components: ${componentType.GetManagedType()}");
+                                Console.WriteLine($"Entity has following component: ${componentType.GetManagedType()}");
                             });
 
                             ValidArea validArea = this.validAreaLookup[entity];
                             Block block = this.blockComponentLookup[entity];
-                            BuildOrder buildOrder = this.buildOrderLookup[entity];
 
                             Console.WriteLine($"Block direction ${block.m_Direction}");
                             Console.WriteLine($"Block position ${block.m_Position}");
@@ -141,21 +141,16 @@ namespace ZonePlacementMod.Systems
                             float dotProduct = Vector2.Dot(perpendicularToTangent, block.m_Direction);
                             
                             Console.WriteLine($"Dot product: ${dotProduct}");
-
-                            Console.WriteLine($"Dot product of direction and position: ${dotProduct}");
+                            Console.WriteLine($"Zoning mode is ${zoningMode}");
                             if (this.cellBufferLookup.HasBuffer(entity)) {
-                                Console.WriteLine("Entity has cell buffer.");
-
                                 DynamicBuffer<Cell> buffer = cellBufferLookup[entity];
 
                                 for (int z = validArea.m_Area.z; z < validArea.m_Area.w; z++) {
                                     for (int x = validArea.m_Area.x; x < validArea.m_Area.y; x++) {
                                         int index = z * block.m_Size.x + x;
-
-                                        Console.WriteLine($"x: {x}, y: {z}, index: {index}");
                                         Cell cell = buffer[index];
 
-                                        Console.WriteLine($"Cell state: ${cell.m_State}");
+                                        Console.WriteLine($"Cell state before: ${cell.m_State}");
                                         if (dotProduct > 0 ) {
                                             Console.WriteLine("Block is to the Left of road.");
 
@@ -164,11 +159,28 @@ namespace ZonePlacementMod.Systems
                                                 if ((cell.m_State & (CellFlags.Occupied | CellFlags.Overridden)) != (CellFlags.Occupied | CellFlags.Overridden)) {
                                                     cell.m_State |= CellFlags.Overridden;
                                                     cell.m_State |= CellFlags.Occupied;
+                                                }
+
+                                                if ((cell.m_State & CellFlags.Visible) != 0) {
                                                     cell.m_State &= ~CellFlags.Visible;
                                                 }
 
                                                 if ((cell.m_State & CellFlags.Roadside) != 0) {
                                                     cell.m_State &= ~CellFlags.Roadside;
+                                                }
+                                            } else {
+                                                // Reverse the state here to make the cells appear.
+                                                if (x == 0 && (cell.m_State & CellFlags.Roadside) == 0) {
+                                                    cell.m_State |= CellFlags.Roadside;
+                                                }
+
+                                                if ((cell.m_State & (CellFlags.Occupied | CellFlags.Overridden)) == (CellFlags.Occupied | CellFlags.Overridden)) {
+                                                    cell.m_State &= ~CellFlags.Overridden;
+                                                    cell.m_State &= ~CellFlags.Occupied;
+                                                }
+
+                                                if ((cell.m_State & CellFlags.Visible) == 0) {
+                                                    cell.m_State |= CellFlags.Visible;
                                                 }
                                             }
                                         } else if (dotProduct < 0) {
@@ -179,6 +191,9 @@ namespace ZonePlacementMod.Systems
                                                 if ((cell.m_State & (CellFlags.Occupied | CellFlags.Overridden)) != (CellFlags.Occupied | CellFlags.Overridden)) {
                                                     cell.m_State |= CellFlags.Overridden;
                                                     cell.m_State |= CellFlags.Occupied;
+                                                }
+
+                                                if ((cell.m_State & CellFlags.Visible) != 0) {
                                                     cell.m_State &= ~CellFlags.Visible;
                                                 }
 
@@ -186,7 +201,23 @@ namespace ZonePlacementMod.Systems
                                                     cell.m_State &= ~CellFlags.Roadside;
                                                 }
                                             }
+                                        } else {
+                                            // Reverse the state here to make the cells appear.
+                                            if (x == 0 && (cell.m_State & CellFlags.Roadside) == 0) {
+                                                cell.m_State |= CellFlags.Roadside;
+                                            }
+
+                                            if ((cell.m_State & CellFlags.Visible) == 0) {
+                                                cell.m_State |= CellFlags.Visible;
+                                            }
+
+                                            if ((cell.m_State & (CellFlags.Occupied | CellFlags.Overridden)) == (CellFlags.Occupied | CellFlags.Overridden)) {
+                                                cell.m_State &= ~CellFlags.Overridden;
+                                                cell.m_State &= ~CellFlags.Occupied;
+                                            }
                                         }
+                                        Console.WriteLine($"Cell state after: ${cell.m_State}");
+
                                         buffer[index] = cell;
                                     }
                                 }
@@ -194,79 +225,27 @@ namespace ZonePlacementMod.Systems
                         }
                     }
                 }
-            }   
+            }
         }
-
-        // private ClosestEdgeIterator findClosestEdge(NativeQuadTree<Entity, QuadTreeBoundsXZ> netSearchTree, Block block, Entity blockEntity) {
-        //     ClosestEdgeIterator ClosestEdgeIterator = new ClosestEdgeIterator() {
-        //         block = block,
-        //         edgeGeometryLookup = edgeGeometryLookup
-        //     };
-
-        //     netSearchTree.Iterate<ClosestEdgeIterator>(ref ClosestEdgeIterator);
-
-        //     return ClosestEdgeIterator;
-        // }
-
-        private struct ClosestEdgeIterator : INativeQuadTreeIterator<Entity, QuadTreeBoundsXZ>
-        {
-
-            public Block block;
-            public ComponentLookup<EdgeGeometry> edgeGeometryLookup;
-
-            public EdgeGeometry currentEdge = default;
-            public float t = default;
-            private float distance = float.MaxValue;
-            private Bezier4x2 curve;
-
-            public ClosestEdgeIterator()
+        public void setZoningMode(string zoningMode) {
+            Console.WriteLine($"Changing zoning mode to ${zoningMode}");
+            switch (zoningMode)
             {
-            }
-
-            public bool Intersect(QuadTreeBoundsXZ bounds)
-            {
-                Console.WriteLine($"Intersecting with bound ${bounds}.");
-                Console.WriteLine($"Block position ${block.m_Position}");
-                return MathUtils.Intersect(
-                    new Bounds2(
-                        new float2(block.m_Position.x - block.m_Size.x * 4f, block.m_Position.z - block.m_Size.x * 4f),
-                        new float2(block.m_Position.x + block.m_Size.x * 4f, block.m_Position.z + block.m_Size.y * 4f)),
-                    bounds.m_Bounds.xz);
-            }
-
-            public void Iterate(QuadTreeBoundsXZ bounds, Entity item)
-            {
-
-                if (edgeGeometryLookup.HasComponent(item)) {
-                    Console.WriteLine("Item has edge geometry data.");
-
-                    EdgeGeometry edgeGeometry = edgeGeometryLookup[item];
-
-                    Bezier4x2[] bezier4x2s = [
-                        edgeGeometry.m_Start.m_Left.xz,
-                        edgeGeometry.m_Start.m_Right.xz,
-                        edgeGeometry.m_End.m_Left.xz,
-                        edgeGeometry.m_End.m_Right.xz
-                    ];
-
-                    for (int i = 0; i < bezier4x2s.Length; i++) {
-                        float new_t = default;
-                        float new_distance = MathUtils.Distance(bezier4x2s[1], block.m_Position.xz, out new_t);
-                        if (new_distance < distance) {
-                            this.t = new_t;
-                            this.distance = new_distance;
-                            this.curve = bezier4x2s[i];
-                        }
-                    }
-                }
-            }
-
-            public Vector2 GetTangent() {
-                // Calculate the derivative of the Bezier curve
-                float2 derivative = 3 * math.pow(1 - t, 2) * (curve.b - curve.a) +
-                                    6 * (1 - t) * t * (curve.c - curve.b) +
-                                    3 * math.pow(t, 2) * (curve.d - curve.c);
-                return new Vector2(derivative.x, derivative.y);
+                case "Left":
+                    this.zoningMode = ZoningMode.LeftOnly;
+                    break;
+                case "Right":
+                    this.zoningMode = ZoningMode.RightOnly;
+                    break;
+                case "Default":
+                    this.zoningMode = ZoningMode.Default;
+                    break;
+                case "None":
+                    this.zoningMode = ZoningMode.None;
+                    break;
+                default:
+                    this.zoningMode = ZoningMode.Default;
+                    break;
             }
         }
 
