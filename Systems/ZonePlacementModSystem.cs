@@ -11,6 +11,7 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
+using ZonePlacementMod.Components;
 using BuildOrder = Game.Zones.BuildOrder;
 
 namespace ZonePlacementMod.Systems
@@ -19,14 +20,6 @@ namespace ZonePlacementMod.Systems
     [UpdateAfter(typeof(BlockSystem))]
     [UpdateAfter(typeof(BlockReferencesSystem))]
     public class EnableZoneSystem: GameSystemBase {
-        public enum ZoningMode {
-            LeftOnly,
-            RightOnly,
-            Default,
-            None
-            
-            // No Share
-        }
         private EntityQuery entityQuery;
         ComponentLookup<Block> blockComponentLookup;
         ComponentLookup<ValidArea> validAreaLookup;
@@ -36,6 +29,8 @@ namespace ZonePlacementMod.Systems
         private ComponentLookup<Created> createComponentLookup;
         private ComponentLookup<Updated> updatedComponentLookup;
         private ComponentLookup<Applied> appliedComponentLookup;
+        private ComponentLookup<ZoningInfo> zoningInfoComponentLookup;
+
         public ZoningMode zoningMode;
 
         protected override void OnCreate() {
@@ -60,6 +55,7 @@ namespace ZonePlacementMod.Systems
             this.createComponentLookup = this.GetComponentLookup<Created>();
             this.updatedComponentLookup = this.GetComponentLookup<Updated>();
             this.appliedComponentLookup = this.GetComponentLookup<Applied>();
+            this.zoningInfoComponentLookup = this.GetComponentLookup<ZoningInfo>();
             setZoningMode("Default");
             this.RequireForUpdate(this.entityQuery);
         }
@@ -67,7 +63,7 @@ namespace ZonePlacementMod.Systems
         [UnityEngine.Scripting.Preserve]
         protected override void OnUpdate()
         {
-            // Console.WriteLine("OnUpdate for EnableZoneSystem");
+            Console.WriteLine("**********OnUpdate for EnableZoneSystem******************");
             this.cellBufferLookup.Update(ref this.CheckedStateRef);
             this.blockComponentLookup.Update(ref this.CheckedStateRef);
             this.validAreaLookup.Update(ref this.CheckedStateRef);
@@ -76,6 +72,7 @@ namespace ZonePlacementMod.Systems
             this.updatedComponentLookup.Update(ref this.CheckedStateRef);
             this.createComponentLookup.Update(ref this.CheckedStateRef);
             this.appliedComponentLookup.Update(ref this.CheckedStateRef);
+            this.zoningInfoComponentLookup.Update(ref this.CheckedStateRef);
 
             NativeArray<Entity> entities = this.entityQuery.ToEntityArray(Allocator.Temp);
 
@@ -108,6 +105,13 @@ namespace ZonePlacementMod.Systems
             Console.WriteLine($"Processing ${entities.Length} entities.");
             for (int i = 0; i < entities.Length; i++) {
                 Entity entity = entities[i];
+                ZoningInfo entityZoningInfo = new ZoningInfo() {
+                    zoningMode = this.zoningMode
+                };
+
+                EntityManager.GetChunk(entity).Archetype.GetComponentTypes().ForEach(componentType => {
+                    Console.WriteLine($"Entity has following component: ${componentType.GetManagedType()}");
+                });
 
                 if (this.ownerComponentLookup.HasComponent(entity)) {
                     Owner owner = this.ownerComponentLookup[entity];
@@ -118,13 +122,30 @@ namespace ZonePlacementMod.Systems
                     if (this.curveComponentLookup.HasComponent(owner.m_Owner)) {
                         Curve curve = this.curveComponentLookup[owner.m_Owner];
 
+                        // If the current was just created and used with a tool
+                        // denoted by the apply component
+                        if (this.appliedComponentLookup.HasComponent(owner.m_Owner)) {
+                            if (this.zoningInfoComponentLookup.HasComponent(owner.m_Owner)) {
+                                Console.WriteLine($"Setting zoning info ${entityZoningInfo}");
+                                this.EntityManager.SetComponentData(owner.m_Owner, entityZoningInfo);
+                            } else {
+                                Console.WriteLine($"Adding & Setting zoning info ${entityZoningInfo}");
+                                this.EntityManager.AddComponent(owner.m_Owner, ComponentType.ReadWrite<ZoningInfo>());
+                                this.EntityManager.SetComponentData(owner.m_Owner, entityZoningInfo);
+                            }
+                        } else {
+                            if (this.zoningInfoComponentLookup.HasComponent(owner.m_Owner)) {
+                                Console.WriteLine($"Getting zoning info ${entityZoningInfo}");
+                                entityZoningInfo = this.zoningInfoComponentLookup[owner.m_Owner];
+                            } else {
+                                // Don't do anything and continue
+                                continue;
+                            }
+                        }
+
                         if (this.validAreaLookup.HasComponent(entity) 
-                            && this.blockComponentLookup.HasComponent(entity)
-                            && this.appliedComponentLookup.HasComponent(owner.m_Owner)) {
+                            && this.blockComponentLookup.HasComponent(entity)) {
                             Console.WriteLine($"Entity is {entity}.");
-                            EntityManager.GetChunk(entity).Archetype.GetComponentTypes().ForEach(componentType => {
-                                Console.WriteLine($"Entity has following component: ${componentType.GetManagedType()}");
-                            });
 
                             ValidArea validArea = this.validAreaLookup[entity];
                             Block block = this.blockComponentLookup[entity];
@@ -154,7 +175,7 @@ namespace ZonePlacementMod.Systems
                                         if (dotProduct > 0 ) {
                                             Console.WriteLine("Block is to the Left of road.");
 
-                                            if (this.zoningMode == ZoningMode.RightOnly || this.zoningMode == ZoningMode.None) {
+                                            if (entityZoningInfo.zoningMode == ZoningMode.RightOnly || entityZoningInfo.zoningMode == ZoningMode.None) {
                                                 // Prevents zoning & make cell invisible
                                                 if ((cell.m_State & (CellFlags.Occupied | CellFlags.Overridden)) != (CellFlags.Occupied | CellFlags.Overridden)) {
                                                     cell.m_State |= CellFlags.Overridden;
@@ -164,15 +185,8 @@ namespace ZonePlacementMod.Systems
                                                 if ((cell.m_State & CellFlags.Visible) != 0) {
                                                     cell.m_State &= ~CellFlags.Visible;
                                                 }
-
-                                                if ((cell.m_State & CellFlags.Roadside) != 0) {
-                                                    cell.m_State &= ~CellFlags.Roadside;
-                                                }
                                             } else {
                                                 // Reverse the state here to make the cells appear.
-                                                if (x == 0 && (cell.m_State & CellFlags.Roadside) == 0) {
-                                                    cell.m_State |= CellFlags.Roadside;
-                                                }
 
                                                 if ((cell.m_State & (CellFlags.Occupied | CellFlags.Overridden)) == (CellFlags.Occupied | CellFlags.Overridden)) {
                                                     cell.m_State &= ~CellFlags.Overridden;
@@ -186,7 +200,7 @@ namespace ZonePlacementMod.Systems
                                         } else if (dotProduct < 0) {
                                             Console.WriteLine("Block is to the Right of the road.");
 
-                                            if (this.zoningMode == ZoningMode.LeftOnly || this.zoningMode == ZoningMode.None) {
+                                            if (entityZoningInfo.zoningMode == ZoningMode.LeftOnly || entityZoningInfo.zoningMode == ZoningMode.None) {
                                                 // Prevents zoning & make cell invisible
                                                 if ((cell.m_State & (CellFlags.Occupied | CellFlags.Overridden)) != (CellFlags.Occupied | CellFlags.Overridden)) {
                                                     cell.m_State |= CellFlags.Overridden;
@@ -195,10 +209,6 @@ namespace ZonePlacementMod.Systems
 
                                                 if ((cell.m_State & CellFlags.Visible) != 0) {
                                                     cell.m_State &= ~CellFlags.Visible;
-                                                }
-
-                                                if ((cell.m_State & CellFlags.Roadside) != 0) {
-                                                    cell.m_State &= ~CellFlags.Roadside;
                                                 }
                                             }
                                         } else {
