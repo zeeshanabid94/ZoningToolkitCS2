@@ -20,6 +20,7 @@ jobs:
           repository: zeeshanabid94/lib-cs2
           token: ${{ secrets.GH_PAT }}
           path: libcs2/
+          ref: master
       - name: Install .NET Core
         uses: actions/setup-dotnet@v3
         with:
