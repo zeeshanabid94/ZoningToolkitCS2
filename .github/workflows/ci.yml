@@ -1,4 +1,4 @@
-name: mycoolmod-ci
+name: zoning-adjuster-cs2-ci
 
 on:
   push:
@@ -14,12 +14,6 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v3
-      - name: Checkout libcs2
-        uses: actions/checkout@v3
-        with:
-          repository: Captain-Of-Coit/libcs2
-          token: ${{ secrets.GH_PAT }}
-          path: libcs2/
       - name: Install .NET Core
         uses: actions/setup-dotnet@v3
         with:

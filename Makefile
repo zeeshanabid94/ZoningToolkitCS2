@@ -13,11 +13,11 @@ build: clean restore
 package-win:
 	@-mkdir dist
 	@cmd /c copy /y "bin\Debug\netstandard2.1\0Harmony.dll" "dist\"
-	@cmd /c copy /y "bin\Debug\netstandard2.1\MyCoolMod.dll" "dist\"
+	@cmd /c copy /y "bin\Debug\netstandard2.1\ZoningAdjusterMod.dll" "dist\"
 	@echo Packaged to dist/
 
 package-unix: build
 	@-mkdir dist
 	@cp bin/Debug/netstandard2.1/0Harmony.dll dist
-	@cp bin/Debug/netstandard2.1/MyCoolMod.dll dist
+	@cp bin/Debug/netstandard2.1/ZoningAdjusterMod.dll dist
 	@echo Packaged to dist/
