@@ -3,3 +3,7 @@ bin/
 obj/
 ts-build/
 **/node_modules
+Backup
+.vs
+.vscode
+libs
