@@ -14,6 +14,12 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v3
+      - name: Checkout libcs2
+        uses: actions/checkout@v3
+        with:
+          repository: zeeshanabid94/lib-cs2
+          token: ${{ secrets.GH_PAT }}
+          path: lib-cs2/
       - name: Install .NET Core
         uses: actions/setup-dotnet@v3
         with:
