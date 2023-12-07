@@ -73,7 +73,7 @@
 
 	<!-- Hook UI -->
 	<ItemGroup>
-		<Reference Include="libs/HookUILib.dll" />
+		<PackageReference Include="HookUILib" Version="0.1.0" />
 	</ItemGroup>
 
 	<!-- Set the default value for BepInExVersion -->
