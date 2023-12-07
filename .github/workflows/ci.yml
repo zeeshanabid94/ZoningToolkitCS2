@@ -19,7 +19,7 @@ jobs:
         with:
           repository: zeeshanabid94/lib-cs2
           token: ${{ secrets.GH_PAT }}
-          path: lib-cs2/
+          path: libcs2/
       - name: Install .NET Core
         uses: actions/setup-dotnet@v3
         with:
