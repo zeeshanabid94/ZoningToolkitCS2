@@ -4,7 +4,9 @@ using Colossal.Mathematics;
 using Game;
 using Game.Common;
 using Game.Net;
+using Game.Tools;
 using Game.Zones;
+using Mono.Options;
 using Unity.Burst.Intrinsics;
 using Unity.Collections;
 using Unity.Entities;
@@ -15,11 +17,7 @@ using ZonePlacementMod.Components;
 
 namespace ZonePlacementMod.Systems
 {
-    [UpdateAfter(typeof(CellCheckSystem))]
     [UpdateAfter(typeof(BlockSystem))]
-    [UpdateAfter(typeof(BlockReferencesSystem))]
-    [UpdateAfter(typeof(Game.Zones.SearchSystem))]
-    [UpdateAfter(typeof(Game.Zones.UpdateCollectSystem))]
     public class EnableZoneSystem: GameSystemBase {
         // private EntityQuery createdEntityQuery;
 
@@ -34,8 +32,11 @@ namespace ZonePlacementMod.Systems
         private ComponentLookup<Applied> appliedComponentLookup;
         private ComponentLookup<ZoningInfo> zoningInfoComponentLookup;
 
-        private ModificationEndBarrier modificationEndBarrier;
+        private ModificationBarrier4B modificationBarrier4B;
 
+        private NetToolSystem netToolSystem;
+
+        private ToolRaycastSystem raycastSystem;
         private EntityTypeHandle entityTypeHandle;
 
         public ZoningMode zoningMode;
@@ -45,8 +46,8 @@ namespace ZonePlacementMod.Systems
 
             this.updatedEntityQuery = this.GetEntityQuery(new EntityQueryDesc() {
                 All = [
-                    ComponentType.ReadOnly<Block>(),
-                    ComponentType.ReadOnly<ValidArea>(),
+                    ComponentType.ReadWrite<Block>(),
+                    ComponentType.ReadWrite<ValidArea>(),
                     ComponentType.ReadWrite<Cell>(),
                     ComponentType.ReadWrite<Owner>()
                 ],
@@ -66,8 +67,11 @@ namespace ZonePlacementMod.Systems
             this.updatedComponentLookup = this.GetComponentLookup<Updated>();
             this.appliedComponentLookup = this.GetComponentLookup<Applied>();
             this.zoningInfoComponentLookup = this.GetComponentLookup<ZoningInfo>();
-            this.modificationEndBarrier = World.GetExistingSystemManaged<ModificationEndBarrier>();
+            this.modificationBarrier4B = World.GetExistingSystemManaged<ModificationBarrier4B>();
+            this.netToolSystem = World.GetExistingSystemManaged<NetToolSystem>();
+            this.raycastSystem = World.GetExistingSystemManaged<ToolRaycastSystem>();
             this.entityTypeHandle = this.GetEntityTypeHandle();
+
             setZoningMode("Default");
             this.RequireForUpdate(this.updatedEntityQuery);
             // this.RequireForUpdate(this.createdEntityQuery);
@@ -132,25 +136,53 @@ namespace ZonePlacementMod.Systems
 
             // createdEntities.Dispose();
 
-            JobHandle allJobs = this.Dependency;
-            EntityCommandBuffer entityCommandBuffer = this.modificationEndBarrier.CreateCommandBuffer();
+            // JobHandle allJobs = this.Dependency;
+            EntityCommandBuffer entityCommandBuffer = this.modificationBarrier4B.CreateCommandBuffer();
 
-            JobHandle updateJobHandle = new UpdateZoneData() {
-                appliedComponentLookup = this.appliedComponentLookup,
-                blockComponentTypeHandle = this.blockComponentTypeHandle,
-                cellBufferTypeHandle = this.cellBufferTypeHandle,
-                createComponentLookup = this.createComponentLookup,
-                curveComponentLookup = this.curveComponentLookup,
-                entityCommandBuffer = entityCommandBuffer,
-                entityTypeHandle = this.entityTypeHandle,
-                ownerComponentLookup = this.ownerComponentLookup,
-                updatedComponentLookup = this.updatedComponentLookup,
-                validAreaTypeHandle = this.validAreaTypeHandle,
-                zoningMode = this.zoningMode,
-                zoningInfoComponentLookup = this.zoningInfoComponentLookup
-            }.Schedule(this.updatedEntityQuery, allJobs);
+            if (netToolSystem.actualMode != NetToolSystem.Mode.Replace) {
+                new UpdateZoneData() {
+                    appliedComponentLookup = this.appliedComponentLookup,
+                    blockComponentTypeHandle = this.blockComponentTypeHandle,
+                    cellBufferTypeHandle = this.cellBufferTypeHandle,
+                    createComponentLookup = this.createComponentLookup,
+                    curveComponentLookup = this.curveComponentLookup,
+                    entityCommandBuffer = entityCommandBuffer,
+                    entityTypeHandle = this.entityTypeHandle,
+                    ownerComponentLookup = this.ownerComponentLookup,
+                    updatedComponentLookup = this.updatedComponentLookup,
+                    validAreaTypeHandle = this.validAreaTypeHandle,
+                    zoningMode = this.zoningMode,
+                    zoningInfoComponentLookup = this.zoningInfoComponentLookup,
+                    upgradedEntity = null
+                }.Run(this.updatedEntityQuery);
+            } else {
+                raycastSystem.GetRaycastResult(out RaycastResult result);
 
-            allJobs = JobHandle.CombineDependencies(updateJobHandle, allJobs);
+                if (result.m_Owner != null) {
+                    EntityManager.GetChunk(result.m_Owner).Archetype.GetComponentTypes().ForEach(componentType => {
+                        Console.WriteLine($"Raycast Entity has following components: ${componentType.GetManagedType()}");
+                    });
+
+                    new UpdateZoneData() {
+                        appliedComponentLookup = this.appliedComponentLookup,
+                        blockComponentTypeHandle = this.blockComponentTypeHandle,
+                        cellBufferTypeHandle = this.cellBufferTypeHandle,
+                        createComponentLookup = this.createComponentLookup,
+                        curveComponentLookup = this.curveComponentLookup,
+                        entityCommandBuffer = entityCommandBuffer,
+                        entityTypeHandle = this.entityTypeHandle,
+                        ownerComponentLookup = this.ownerComponentLookup,
+                        updatedComponentLookup = this.updatedComponentLookup,
+                        validAreaTypeHandle = this.validAreaTypeHandle,
+                        zoningMode = this.zoningMode,
+                        zoningInfoComponentLookup = this.zoningInfoComponentLookup,
+                        upgradedEntity = result.m_Owner
+                    }.Run(this.updatedEntityQuery);
+                }
+            }
+
+
+            // allJobs = JobHandle.CombineDependencies(updateJobHandle, allJobs);
 
             // JobHandle createdJobHandle = new UpdateZoneData() {
             //     appliedComponentLookup = this.appliedComponentLookup,
@@ -169,9 +201,9 @@ namespace ZonePlacementMod.Systems
 
             // allJobs = JobHandle.CombineDependencies(createdJobHandle, allJobs);
 
-            this.modificationEndBarrier.AddJobHandleForProducer(allJobs);
+            // this.modificationBarrier4B.AddJobHandleForProducer(allJobs);
 
-            this.Dependency = allJobs;
+            // this.Dependency = allJobs;
         }
 
         public void setZoningMode(string zoningMode) {
@@ -207,6 +239,7 @@ namespace ZonePlacementMod.Systems
         private struct UpdateZoneData : IJobChunk
         {
             public ZoningMode zoningMode;
+            public Entity? upgradedEntity;
             public EntityTypeHandle entityTypeHandle;
             public ComponentTypeHandle<Block> blockComponentTypeHandle;
             public ComponentTypeHandle<ValidArea> validAreaTypeHandle;
@@ -226,38 +259,45 @@ namespace ZonePlacementMod.Systems
                 NativeArray<Block> blocks = chunk.GetNativeArray(ref this.blockComponentTypeHandle);
                 NativeArray<Entity> entities = chunk.GetNativeArray(this.entityTypeHandle);
                 BufferAccessor<Cell> cellBuffers= chunk.GetBufferAccessor(ref this.cellBufferTypeHandle);
-                ZoningInfo entityZoningInfo = new ZoningInfo() {
-                    zoningMode = this.zoningMode
-                };
 
                 for (int i = 0; i < blocks.Length; i++) {
                     Entity entity = entities[i];
+                    ZoningInfo entityZoningInfo = new ZoningInfo() {
+                        zoningMode = this.zoningMode
+                    };
                     if (this.ownerComponentLookup.HasComponent(entity)) {
                         Owner owner = this.ownerComponentLookup[entity];
 
                         if (this.curveComponentLookup.HasComponent(owner.m_Owner)) {
                             Curve curve = this.curveComponentLookup[owner.m_Owner];
 
-                            // If the current was just created and used with a tool
-                            // denoted by the apply component
-                            if (this.appliedComponentLookup.HasComponent(owner.m_Owner)) {
-                                if (this.zoningInfoComponentLookup.HasComponent(entity)) {
-                                    entityCommandBuffer.SetComponent(entity, entityZoningInfo);
-                                } else {
-                                    Console.WriteLine($"Adding & Setting zoning info ${entityZoningInfo}");
-                                    entityCommandBuffer.AddComponent(entity, ComponentType.ReadWrite<ZoningInfo>());
-                                    entityCommandBuffer.SetComponent(entity, entityZoningInfo);
-                                }
-                            } else {
-                                if (this.zoningInfoComponentLookup.HasComponent(entity)) {
-                                    Console.WriteLine($"Getting zoning info ${entityZoningInfo}");
-                                    entityZoningInfo = this.zoningInfoComponentLookup[entity];
+                            if (upgradedEntity != null && upgradedEntity != owner.m_Owner) {
+                                UnityEngine.Debug.Log("Upgraded entity matches owner entity. Setting zoning info from owner...");
+                                if (zoningInfoComponentLookup.HasComponent(owner.m_Owner)) {
+                                    entityZoningInfo = this.zoningInfoComponentLookup[owner.m_Owner];
                                 }
                             }
 
+                            // If the current was just created and used with a tool
+                            // denoted by the apply component
+                            // if (this.appliedComponentLookup.HasComponent(owner.m_Owner)) {
+                            //     if (this.zoningInfoComponentLookup.HasComponent(entity)) {
+                            //         entityCommandBuffer.SetComponent(entity, entityZoningInfo);
+                            //     } else {
+                            //         Console.WriteLine($"Adding & Setting zoning info ${entityZoningInfo}");
+                            //         entityCommandBuffer.AddComponent(entity, ComponentType.ReadWrite<ZoningInfo>());
+                            //         entityCommandBuffer.SetComponent(entity, entityZoningInfo);
+                            //     }
+                            // } else {
+                            //     if (this.zoningInfoComponentLookup.HasComponent(entity)) {
+                            //         Console.WriteLine($"Getting zoning info ${entityZoningInfo}");
+                            //         entityZoningInfo = this.zoningInfoComponentLookup[entity];
+                            //     }
+                            // }
+
                             Console.WriteLine($"Entity is {entity}.");
 
-                            ValidArea validArea = validAreas[i];
+                            // ValidArea validArea = validAreas[i];
                             Block block = blocks[i];
 
                             Console.WriteLine($"Block direction ${block.m_Direction}");
@@ -273,73 +313,84 @@ namespace ZonePlacementMod.Systems
                             Console.WriteLine($"Dot product: ${dotProduct}");
                             Console.WriteLine($"Zoning mode is ${zoningMode}");
 
-                            DynamicBuffer<Cell> buffer = cellBuffers[i];
+                            // DynamicBuffer<Cell> buffer = cellBuffers[i];
 
-                            for (int z = validArea.m_Area.z; z < validArea.m_Area.w; z++) {
-                                for (int x = validArea.m_Area.x; x < validArea.m_Area.y; x++) {
-                                    int index = z * block.m_Size.x + x;
-                                    Cell cell = buffer[index];
-
-                                    Console.WriteLine($"Cell state before: ${cell.m_State}");
-                                    if (dotProduct > 0 ) {
-                                        Console.WriteLine("Block is to the Left of road.");
-
-                                        if (entityZoningInfo.zoningMode == ZoningMode.RightOnly || entityZoningInfo.zoningMode == ZoningMode.None) {
-                                            // Prevents zoning & make cell invisible
-                                            if ((cell.m_State & (CellFlags.Occupied | CellFlags.Overridden)) != (CellFlags.Occupied | CellFlags.Overridden)) {
-                                                cell.m_State |= CellFlags.Overridden;
-                                                cell.m_State |= CellFlags.Occupied;
-                                            }
-
-                                            if ((cell.m_State & CellFlags.Visible) != 0) {
-                                                cell.m_State &= ~CellFlags.Visible;
-                                            }
-                                        } else {
-                                            // Reverse the state here to make the cells appear.
-
-                                            if ((cell.m_State & (CellFlags.Occupied | CellFlags.Overridden)) == (CellFlags.Occupied | CellFlags.Overridden)) {
-                                                cell.m_State &= ~CellFlags.Overridden;
-                                                cell.m_State &= ~CellFlags.Occupied;
-                                            }
-
-                                            if ((cell.m_State & CellFlags.Visible) == 0) {
-                                                cell.m_State |= CellFlags.Visible;
-                                            }
-                                        }
-                                    } else if (dotProduct < 0) {
-                                        Console.WriteLine("Block is to the Right of the road.");
-
-                                        if (entityZoningInfo.zoningMode == ZoningMode.LeftOnly || entityZoningInfo.zoningMode == ZoningMode.None) {
-                                            // Prevents zoning & make cell invisible
-                                            if ((cell.m_State & (CellFlags.Occupied | CellFlags.Overridden)) != (CellFlags.Occupied | CellFlags.Overridden)) {
-                                                cell.m_State |= CellFlags.Overridden;
-                                                cell.m_State |= CellFlags.Occupied;
-                                            }
-
-                                            if ((cell.m_State & CellFlags.Visible) != 0) {
-                                                cell.m_State &= ~CellFlags.Visible;
-                                            }
-                                        }
-                                    } else {
-                                        // Reverse the state here to make the cells appear.
-                                        if (x == 0 && (cell.m_State & CellFlags.Roadside) == 0) {
-                                            cell.m_State |= CellFlags.Roadside;
-                                        }
-
-                                        if ((cell.m_State & CellFlags.Visible) == 0) {
-                                            cell.m_State |= CellFlags.Visible;
-                                        }
-
-                                        if ((cell.m_State & (CellFlags.Occupied | CellFlags.Overridden)) == (CellFlags.Occupied | CellFlags.Overridden)) {
-                                            cell.m_State &= ~CellFlags.Overridden;
-                                            cell.m_State &= ~CellFlags.Occupied;
-                                        }
-                                    }
-                                    Console.WriteLine($"Cell state after: ${cell.m_State}");
-
-                                    buffer[index] = cell;
+                            if (dotProduct > 0) {
+                                if (entityZoningInfo.zoningMode == ZoningMode.RightOnly || entityZoningInfo.zoningMode == ZoningMode.None) {
+                                    entityCommandBuffer.AddComponent(entity, new Deleted());
+                                    entityCommandBuffer.RemoveComponent<Updated>(entity);
+                                    entityCommandBuffer.RemoveComponent<Created>(entity);
+                                }
+                            } else {
+                                if (entityZoningInfo.zoningMode == ZoningMode.LeftOnly || entityZoningInfo.zoningMode == ZoningMode.None) {
+                                    entityCommandBuffer.AddComponent(entity, new Deleted());
+                                    entityCommandBuffer.RemoveComponent<Updated>(entity);
+                                    entityCommandBuffer.RemoveComponent<Created>(entity);
                                 }
                             }
+                            entityCommandBuffer.AddComponent(owner.m_Owner, entityZoningInfo);
+
+                            // for (int z = validArea.m_Area.z; z < validArea.m_Area.w; z++) {
+                            //     for (int x = validArea.m_Area.x; x < validArea.m_Area.y; x++) {
+                            //         int index = z * block.m_Size.x + x;
+                            //         Cell cell = buffer[index];
+
+                            //         Console.WriteLine($"Cell state before: ${cell.m_State}");
+                            //         if (dotProduct > 0 ) {
+                            //             Console.WriteLine("Block is to the Left of road.");
+                            //             cell.m_State |= CellFlags.Redundant;
+
+                            //             if (entityZoningInfo.zoningMode == ZoningMode.RightOnly || entityZoningInfo.zoningMode == ZoningMode.None) {
+                            //                 // Prevents zoning & make cell invisible
+                            //                 if ((cell.m_State & (CellFlags.Occupied | CellFlags.Overridden)) != (CellFlags.Occupied | CellFlags.Overridden)) {
+                            //                     cell.m_State |= CellFlags.Overridden;
+                            //                     cell.m_State |= CellFlags.Occupied;
+                            //                 }
+
+                            //                 if ((cell.m_State & CellFlags.Visible) != 0) {
+                            //                     cell.m_State &= ~CellFlags.Visible;
+                            //                 }
+                            //             } else {
+                            //                 // Reverse the state here to make the cells appear.
+                            //                 if ((cell.m_State & (CellFlags.Occupied | CellFlags.Overridden)) == (CellFlags.Occupied | CellFlags.Overridden)) {
+                            //                     cell.m_State &= ~CellFlags.Overridden;
+                            //                     cell.m_State &= ~CellFlags.Occupied;
+                            //                 }
+
+                            //                 if ((cell.m_State & CellFlags.Visible) == 0) {
+                            //                     cell.m_State |= CellFlags.Visible;
+                            //                 }
+                            //             }
+                            //         } else if (dotProduct < 0) {
+                            //             cell.m_State |= CellFlags.Redundant;
+                            //             Console.WriteLine("Block is to the Right of the road.");
+
+                            //             if (entityZoningInfo.zoningMode == ZoningMode.LeftOnly || entityZoningInfo.zoningMode == ZoningMode.None) {
+                            //                 // Prevents zoning & make cell invisible
+                            //                 if ((cell.m_State & (CellFlags.Occupied | CellFlags.Overridden)) != (CellFlags.Occupied | CellFlags.Overridden)) {
+                            //                     cell.m_State |= CellFlags.Overridden;
+                            //                     cell.m_State |= CellFlags.Occupied;
+                            //                 }
+
+                            //                 if ((cell.m_State & CellFlags.Visible) != 0) {
+                            //                     cell.m_State &= ~CellFlags.Visible;
+                            //                 }
+                            //             }
+                            //         } else {
+                            //             if ((cell.m_State & CellFlags.Visible) == 0) {
+                            //                 cell.m_State |= CellFlags.Visible;
+                            //             }
+
+                            //             if ((cell.m_State & (CellFlags.Occupied | CellFlags.Overridden)) == (CellFlags.Occupied | CellFlags.Overridden)) {
+                            //                 cell.m_State &= ~CellFlags.Overridden;
+                            //                 cell.m_State &= ~CellFlags.Occupied;
+                            //             }
+                            //         }
+                            //         Console.WriteLine($"Cell state after: ${cell.m_State}");
+
+                            //         buffer[index] = cell;
+                            //     }
+                            // }
                         }
                     }
                 }
