@@ -17,7 +17,7 @@ jobs:
       - name: Checkout libcs2
         uses: actions/checkout@v3
         with:
-          repository: zeeshanabid94/lib-cs2
+          repository: zeeshanabid94/CS2Library
           token: ${{ secrets.GH_PAT }}
           path: libcs2/
           ref: master
