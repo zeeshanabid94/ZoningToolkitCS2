@@ -45,19 +45,19 @@ class ZoningAdjusterPanel extends React.Component {
             width: '200px',
             margin: '20px auto',
             textAlign: 'center',
+            transition: 'box-shadow 0.3s ease-in-out',
             pointerEvents: 'auto'
         };
 
         const buttonStyle = {
             margin: '5px',
             padding: '10px 20px',
-            borderRadius: "10px", // Rounded edges
         };
 
         const leftButtonStyle = {
             ...buttonStyle,
             background: 'linear-gradient(to right, white 55%, gray 45%)',
-            border: this.state.zoningMode === 'Left' ? '5px solid green' : 'none',
+            border: this.state.zoningMode === 'Left' ? '10px solid green' : 'none',
         }
 
         const rightButtonStyle = {
@@ -83,9 +83,9 @@ class ZoningAdjusterPanel extends React.Component {
             <div 
                 style={windowStyle}
             >
-                {this.renderZoningModeButton("Default", defaultButtonStyle)}
                 {this.renderZoningModeButton("Left", leftButtonStyle)}
                 {this.renderZoningModeButton("Right", rightButtonStyle)}
+                {this.renderZoningModeButton("Default", defaultButtonStyle)}
                 {this.renderZoningModeButton("None", noneButtonStyle)}
             </div>
         );

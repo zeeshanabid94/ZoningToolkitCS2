@@ -12,7 +12,6 @@ const ZoningAdjusterUI = () => {
         border: "none", // Removing any border or outline
     }
     return <div id="UI" style={style}>
-        <Text>Zoning Adjuster</Text>
         <ZoningAdjusterPanel />
     </div>
 }
