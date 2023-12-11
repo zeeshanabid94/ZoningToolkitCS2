@@ -5,7 +5,8 @@ class ZoningAdjusterPanel extends React.Component {
         super(props);
         this.state = {
             zoningMode: '',
-            isFocused: false
+            isFocused: false,
+            isVisible: false
         };
     }
 
@@ -14,10 +15,15 @@ class ZoningAdjusterPanel extends React.Component {
             console.log(`Zoning mode fetched ${zoningMode}`);
             this.setState({ zoningMode: zoningMode})
         })
+        this.setState({ isVisible: true })
     }
 
     componentWillUnmount() {
         this.unsub();
+    }
+
+    handleClose = () => {
+        this.setState({ isVisible: false });
     }
 
     selectZoningMode = (zoningMode) => {
@@ -78,16 +84,49 @@ class ZoningAdjusterPanel extends React.Component {
             border: this.state.zoningMode === 'None' ? '10px solid green' : 'none',
         }
 
+        const closeButtonStyle = {
+            position: 'absolute', 
+            top: '10px', 
+            right: '10px', 
+            cursor: 'pointer' 
+        }
+        
+        const columnStyle = {
+            display: 'flex',
+            flexDirection: 'row'
+        }
+
+        const { isVisible } = this.state;
+
         // Apply the styles to the elements
         return (
-            <div 
-                style={windowStyle}
-            >
-                {this.renderZoningModeButton("Left", leftButtonStyle)}
-                {this.renderZoningModeButton("Right", rightButtonStyle)}
-                {this.renderZoningModeButton("Default", defaultButtonStyle)}
-                {this.renderZoningModeButton("None", noneButtonStyle)}
-            </div>
+            <>
+                {isVisible && (
+                    <div 
+                        style={windowStyle}
+                    >
+                        <button 
+                            style={closeButtonStyle}
+                            onClick={this.handleClose} // Assuming you have a method to handle the close action
+                        >
+                            X
+                        </button>
+                        <div style={columnStyle}>
+                            <div style={{ flex: 1}}>
+                                {this.renderZoningModeButton("Left", leftButtonStyle)}
+                                {this.renderZoningModeButton("Right", rightButtonStyle)}
+                                {this.renderZoningModeButton("Default", defaultButtonStyle)}
+                                {this.renderZoningModeButton("None", noneButtonStyle)}
+                            </div>
+
+                            <div style={{ flex: 1}}>
+                                Toggles will go here.
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </>
+            
         );
     }
 

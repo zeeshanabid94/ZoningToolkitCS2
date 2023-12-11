@@ -1920,7 +1920,8 @@
       super(props);
       this.state = {
         zoningMode: "",
-        isFocused: false
+        isFocused: false,
+        isVisible: false
       };
     }
     componentDidMount() {
@@ -1928,10 +1929,14 @@
         console.log(`Zoning mode fetched ${zoningMode}`);
         this.setState({ zoningMode });
       });
+      this.setState({ isVisible: true });
     }
     componentWillUnmount() {
       this.unsub();
     }
+    handleClose = () => {
+      this.setState({ isVisible: false });
+    };
     selectZoningMode = (zoningMode) => {
       console.log(`Button clicked. Zoning mode ${zoningMode}`);
       sendDataToCSharp("zoning_adjuster_ui_namespace", "zoning_mode_update", zoningMode);
@@ -1980,16 +1985,32 @@
         background: "gray",
         border: this.state.zoningMode === "None" ? "10px solid green" : "none"
       };
-      return /* @__PURE__ */ import_react.default.createElement(
+      const closeButtonStyle = {
+        position: "absolute",
+        top: "10px",
+        right: "10px",
+        cursor: "pointer"
+      };
+      const columnStyle = {
+        display: "flex",
+        flexDirection: "row"
+      };
+      const { isVisible } = this.state;
+      return /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, isVisible && /* @__PURE__ */ import_react.default.createElement(
         "div",
         {
           style: windowStyle
         },
-        this.renderZoningModeButton("Left", leftButtonStyle),
-        this.renderZoningModeButton("Right", rightButtonStyle),
-        this.renderZoningModeButton("Default", defaultButtonStyle),
-        this.renderZoningModeButton("None", noneButtonStyle)
-      );
+        /* @__PURE__ */ import_react.default.createElement(
+          "button",
+          {
+            style: closeButtonStyle,
+            onClick: this.handleClose
+          },
+          "X"
+        ),
+        /* @__PURE__ */ import_react.default.createElement("div", { style: columnStyle }, /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1 } }, this.renderZoningModeButton("Left", leftButtonStyle), this.renderZoningModeButton("Right", rightButtonStyle), this.renderZoningModeButton("Default", defaultButtonStyle), this.renderZoningModeButton("None", noneButtonStyle)), /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1 } }, "Toggles will go here."))
+      ));
     }
     get_zoning_mode() {
       console.log("Getting zoning mode.");
