@@ -54,6 +54,10 @@ namespace ZonePlacementMod.Systems
         private ToolRaycastSystem raycastSystem;
         public ZoningMode zoningMode;
 
+        public bool upgradeEnabled;
+
+        public bool shouldApplyToNewRoads;
+
         protected override void OnCreate() {
             base.OnCreate();
 
@@ -124,6 +128,8 @@ namespace ZonePlacementMod.Systems
             this.raycastSystem = World.GetExistingSystemManaged<ToolRaycastSystem>();
 
             setZoningMode("Default");
+            setUpgradeEnabled(false);
+            setShouldApplyToNewRoads(false);
             this.RequireForUpdate(this.updatedEntityQuery);
         }
         
@@ -156,6 +162,7 @@ namespace ZonePlacementMod.Systems
 
             // Console.WriteLine("*************Printing deleted edges.*************");
             // this.listEntityComponentsInQuery(this.deleteEdgeQuery);
+
 
             NativeParallelHashMap<float2, Entity> deletedEntitiesByStartPoint = new NativeParallelHashMap<float2, Entity>(32, Allocator.Temp);
             NativeParallelHashMap<float2, Entity> deletedEntitiesByEndPoint = new NativeParallelHashMap<float2, Entity>(32, Allocator.Temp);
@@ -210,7 +217,8 @@ namespace ZonePlacementMod.Systems
                         appliedLookup = this.appliedLookup,
                         entitiesByStartPoint = deletedEntitiesByStartPoint,
                         entitiesByEndPoint = deletedEntitiesByEndPoint,
-                        upgradedEntity = result.m_Owner
+                        upgradedEntity = result.m_Owner,
+                        upgradeEnabled = upgradeEnabled
                     }.Schedule(this.updatedEntityQuery, this.Dependency);
                     this.Dependency = JobHandle.CombineDependencies(this.Dependency, jobHandle);
                 }
@@ -249,6 +257,14 @@ namespace ZonePlacementMod.Systems
             }
         }
 
+        public void setUpgradeEnabled(bool enabled) {
+            this.upgradeEnabled = enabled;
+        }
+
+        public void setShouldApplyToNewRoads(bool value) {
+            this.shouldApplyToNewRoads = value;
+        }
+
         public Vector2 GetTangent(Bezier4x2 curve, float t) {
             // Calculate the derivative of the Bezier curve
             float2 derivative = 3 * math.pow(1 - t, 2) * (curve.b - curve.a) +
@@ -283,7 +299,7 @@ namespace ZonePlacementMod.Systems
             public EntityCommandBuffer entityCommandBuffer;
             public NativeParallelHashMap<float2, Entity> entitiesByStartPoint;
             public NativeParallelHashMap<float2, Entity> entitiesByEndPoint;
-
+            public bool upgradeEnabled;
             public void Execute(in ArchetypeChunk chunk, int unfilteredChunkIndex, bool useEnabledMask, in v128 chunkEnabledMask)
             {
                 Console.WriteLine("Executing Zone Adjustment Job.");
@@ -357,7 +373,7 @@ namespace ZonePlacementMod.Systems
                                         }
                                     } 
                             } else if (updateLookup.HasComponent(owner.m_Owner)) {
-                                if (upgradedEntity != null && upgradedEntity != owner.m_Owner) {
+                                if (upgradeEnabled == false || (upgradedEntity != null && upgradedEntity != owner.m_Owner)) {
                                     Console.WriteLine("Upgraded entity doesn't matches owner entity. Setting zoning info from owner...");
                                     if (zoningInfoComponentLookup.HasComponent(owner.m_Owner)) {
                                         entityZoningInfo = this.zoningInfoComponentLookup[owner.m_Owner];

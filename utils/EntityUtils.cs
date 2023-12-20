@@ -2,6 +2,7 @@ using System;
 using Colossal.IO.AssetDatabase.Internal;
 using Game.Common;
 using Game.Net;
+using Game.UI;
 using Unity.Collections;
 using Unity.Entities;
 using ZonePlacementMod.Systems;
@@ -12,6 +13,14 @@ namespace ZoningAdjusterMod.Utilties {
             gameSystemBase.EntityManager.GetComponentTypes(entity).ForEach(compoenentType => {
                 Console.WriteLine($"Entity has component ${compoenentType.GetManagedType()}");
             });
+        }
+
+        public static void listEntityComponents(this UISystemBase uiSystemBase, Entity entity) {
+            uiSystemBase.EntityManager.GetComponentTypes(entity).ForEach(compoenentType => {
+                Console.WriteLine($"Entity has component ${compoenentType.GetManagedType()}");
+            });
+
+            
         }
 
         public static void listCurveComponentData(this EnableZoneSystem system, Entity entity) {

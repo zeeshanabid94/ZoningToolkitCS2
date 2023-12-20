@@ -1955,7 +1955,7 @@
       const windowStyle = {
         border: "1px solid #ccc",
         padding: "20px",
-        width: "200px",
+        width: "250px",
         margin: "20px auto",
         textAlign: "center",
         transition: "box-shadow 0.3s ease-in-out",
