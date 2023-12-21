@@ -1921,7 +1921,9 @@
       this.state = {
         zoningMode: "",
         isFocused: false,
-        isVisible: false
+        isVisible: false,
+        isEnabled: false,
+        isUpgradeEnabled: false
       };
     }
     componentDidMount() {
@@ -1929,10 +1931,20 @@
         console.log(`Zoning mode fetched ${zoningMode}`);
         this.setState({ zoningMode });
       });
+      this.unsub_enabled = updateEventFromCSharp("zoning_adjuster_ui_namespace.apply_to_new_roads", (apply_to_new_roads) => {
+        console.log(`Enabled Toggled ${apply_to_new_roads}`);
+        this.setState({ isEnabled: apply_to_new_roads });
+      });
+      this.unsub_upgrade_enabled = updateEventFromCSharp("zoning_adjuster_ui_namespace.upgrade_enabled", (upgradeEnabled) => {
+        console.log(`Upgrade Enabled Toggled ${upgradeEnabled}`);
+        this.setState({ isUpgradeEnabled: upgradeEnabled });
+      });
       this.setState({ isVisible: true });
     }
     componentWillUnmount() {
       this.unsub();
+      this.unsub_enabled();
+      this.unsub_upgrade_enabled();
     }
     handleClose = () => {
       this.setState({ isVisible: false });
@@ -1940,6 +1952,14 @@
     selectZoningMode = (zoningMode) => {
       console.log(`Button clicked. Zoning mode ${zoningMode}`);
       sendDataToCSharp("zoning_adjuster_ui_namespace", "zoning_mode_update", zoningMode);
+    };
+    enabledButtonClicked = () => {
+      console.log(`Button clicked. Enabled ${this.state.isEnabled}`);
+      sendDataToCSharp(("zoning_adjuster_ui_namespace", "apply_to_new_roads", !this.state.isEnabled));
+    };
+    upgradeEnabledButtonClicked = () => {
+      console.log(`Button clicked. Upgrade Enabled ${this.state.isUpgradeEnabled}`);
+      sendDataToCSharp(("zoning_adjuster_ui_namespace", "upgrade_enabled", !this.state.isUpgradeEnabled));
     };
     renderZoningModeButton(zoningMode, style) {
       return /* @__PURE__ */ import_react.default.createElement(
@@ -1949,6 +1969,16 @@
           onClick: () => this.selectZoningMode(zoningMode)
         },
         zoningMode
+      );
+    }
+    renderButton(buttonLabel, buttonStyle, onClick) {
+      return /* @__PURE__ */ import_react.default.createElement(
+        "button",
+        {
+          style: buttonStyle,
+          onClick
+        },
+        buttonLabel
       );
     }
     render() {
@@ -1985,6 +2015,16 @@
         background: "gray",
         border: this.state.zoningMode === "None" ? "10px solid green" : "none"
       };
+      const enabledButtonStyle = {
+        ...buttonStyle,
+        background: "gray",
+        border: this.state.isEnabled === true ? "10px solid green" : "none"
+      };
+      const upgradeEnabledStyle = {
+        ...buttonStyle,
+        background: "gray",
+        border: this.state.isUpgradeEnabled === true ? "10px solid green" : "none"
+      };
       const closeButtonStyle = {
         position: "absolute",
         top: "10px",
@@ -2009,7 +2049,7 @@
           },
           "X"
         ),
-        /* @__PURE__ */ import_react.default.createElement("div", { style: columnStyle }, /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1 } }, this.renderZoningModeButton("Left", leftButtonStyle), this.renderZoningModeButton("Right", rightButtonStyle), this.renderZoningModeButton("Default", defaultButtonStyle), this.renderZoningModeButton("None", noneButtonStyle)), /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1 } }, "Toggles will go here."))
+        /* @__PURE__ */ import_react.default.createElement("div", { style: columnStyle }, /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1 } }, this.renderZoningModeButton("Left", leftButtonStyle), this.renderZoningModeButton("Right", rightButtonStyle), this.renderZoningModeButton("Default", defaultButtonStyle), this.renderZoningModeButton("None", noneButtonStyle)), /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1 } }, this.renderButton("Enabled", enabledButtonStyle, this.enabledButtonClicked), this.renderButton("UpgradeEnabled", upgradeEnabledStyle, this.upgradeEnabledButtonClicked)))
       ));
     }
     get_zoning_mode() {

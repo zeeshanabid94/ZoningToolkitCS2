@@ -6,7 +6,9 @@ class ZoningAdjusterPanel extends React.Component {
         this.state = {
             zoningMode: '',
             isFocused: false,
-            isVisible: false
+            isVisible: false,
+            isEnabled: false,
+            isUpgradeEnabled: false
         };
     }
 
@@ -15,11 +17,21 @@ class ZoningAdjusterPanel extends React.Component {
             console.log(`Zoning mode fetched ${zoningMode}`);
             this.setState({ zoningMode: zoningMode})
         })
+        this.unsub_enabled = updateEventFromCSharp('zoning_adjuster_ui_namespace.apply_to_new_roads', (apply_to_new_roads) => {
+            console.log(`Enabled Toggled ${apply_to_new_roads}`);
+            this.setState({ isEnabled: apply_to_new_roads})
+        })
+        this.unsub_upgrade_enabled = updateEventFromCSharp('zoning_adjuster_ui_namespace.upgrade_enabled', (upgradeEnabled) => {
+            console.log(`Upgrade Enabled Toggled ${upgradeEnabled}`);
+            this.setState({ isUpgradeEnabled: upgradeEnabled})
+        })
         this.setState({ isVisible: true })
     }
 
     componentWillUnmount() {
         this.unsub();
+        this.unsub_enabled();
+        this.unsub_upgrade_enabled();
     }
 
     handleClose = () => {
@@ -31,6 +43,16 @@ class ZoningAdjusterPanel extends React.Component {
         sendDataToCSharp('zoning_adjuster_ui_namespace', 'zoning_mode_update', zoningMode);
     }
 
+    enabledButtonClicked = () => {
+        console.log(`Button clicked. Enabled ${this.state.isEnabled}`);
+        sendDataToCSharp(('zoning_adjuster_ui_namespace', 'apply_to_new_roads', !this.state.isEnabled));
+    }
+
+    upgradeEnabledButtonClicked = () => {
+        console.log(`Button clicked. Upgrade Enabled ${this.state.isUpgradeEnabled}`);
+        sendDataToCSharp(('zoning_adjuster_ui_namespace', 'upgrade_enabled', !this.state.isUpgradeEnabled));
+    }
+
     renderZoningModeButton(zoningMode, style) {
         return (
             <button 
@@ -38,6 +60,17 @@ class ZoningAdjusterPanel extends React.Component {
                 onClick={() => this.selectZoningMode(zoningMode)}
             >
             {zoningMode}
+            </button>
+        );
+    }
+
+    renderButton(buttonLabel, buttonStyle, onClick) {
+        return (
+            <button 
+                style={buttonStyle}
+                onClick={onClick}
+            >
+            {buttonLabel}
             </button>
         );
     }
@@ -83,6 +116,19 @@ class ZoningAdjusterPanel extends React.Component {
             background: 'gray',
             border: this.state.zoningMode === 'None' ? '10px solid green' : 'none',
         }
+        
+        const enabledButtonStyle = {
+            ...buttonStyle,
+            background: 'gray',
+            border: this.state.isEnabled === true ? '10px solid green' : 'none',
+        }
+
+        
+        const upgradeEnabledStyle = {
+            ...buttonStyle,
+            background: 'gray',
+            border: this.state.isUpgradeEnabled === true ? '10px solid green' : 'none',
+        }
 
         const closeButtonStyle = {
             position: 'absolute', 
@@ -120,7 +166,8 @@ class ZoningAdjusterPanel extends React.Component {
                             </div>
 
                             <div style={{ flex: 1}}>
-                                Toggles will go here.
+                                {this.renderButton("Enabled", enabledButtonStyle, this.enabledButtonClicked)}
+                                {this.renderButton("UpgradeEnabled", upgradeEnabledStyle, this.upgradeEnabledButtonClicked)}
                             </div>
                         </div>
                     </div>
