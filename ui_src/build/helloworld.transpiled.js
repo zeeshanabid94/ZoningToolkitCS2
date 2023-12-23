@@ -1985,7 +1985,7 @@
       const windowStyle = {
         border: "1px solid #ccc",
         padding: "20px",
-        width: "250px",
+        width: "auto",
         margin: "20px auto",
         textAlign: "center",
         transition: "box-shadow 0.3s ease-in-out",
@@ -1997,33 +1997,27 @@
       };
       const leftButtonStyle = {
         ...buttonStyle,
-        background: "linear-gradient(to right, white 55%, gray 45%)",
-        border: this.state.zoningMode === "Left" ? "10px solid green" : "none"
+        background: this.state.zoningMode === "Left" ? "green" : "gray"
       };
       const rightButtonStyle = {
         ...buttonStyle,
-        background: "linear-gradient(to right, gray 55%, white 55%)",
-        border: this.state.zoningMode === "Right" ? "10px solid green" : "none"
+        background: this.state.zoningMode === "Right" ? "green" : "gray"
       };
       const defaultButtonStyle = {
         ...buttonStyle,
-        background: "linear-gradient(to right, white 20%, gray 30%, gray 70%, white 80%)",
-        border: this.state.zoningMode === "Default" ? "10px solid green" : "none"
+        background: this.state.zoningMode === "Default" ? "green" : "gray"
       };
       const noneButtonStyle = {
         ...buttonStyle,
-        background: "gray",
-        border: this.state.zoningMode === "None" ? "10px solid green" : "none"
+        background: this.state.zoningMode === "None" ? "green" : "gray"
       };
       const enabledButtonStyle = {
         ...buttonStyle,
-        background: "gray",
-        border: this.state.isEnabled === true ? "10px solid green" : "none"
+        background: this.state.isEnabled === true ? "green" : "gray"
       };
       const upgradeEnabledStyle = {
         ...buttonStyle,
-        background: "gray",
-        border: this.state.isUpgradeEnabled === true ? "10px solid green" : "none"
+        background: this.state.isUpgradeEnabled === true ? "green" : "gray"
       };
       const closeButtonStyle = {
         position: "absolute",
