@@ -18,6 +18,17 @@ A mod to allow changing the zoning of roads.
 - (Optional) [dotnet-script](https://github.com/dotnet-script/dotnet-script) (for `rename.csx` helper script)
     - Installation `dotnet tool install -g dotnet-script`
 
+# Manual Installation
+- Depending on your BepInEx version download the relevant file:
+    - BepInEx 5: Download build-with-5
+    - BepInEx 6: Download build-with-6
+- Create a ZoningAdjusterMod folder in BepInEx/Plugins folder
+- Copy the unzipped files into the plugins folder
+
+# Reporting Issues
+If you encounter issues, please open an issue on this repo. It would be greatly appreciated if you could provide a gif of the problem or a video.
+Also, a logfile would also be nice to debug any issues.
+
 # Development
 
 ## Usage
