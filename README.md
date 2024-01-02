@@ -1,6 +1,6 @@
-# Cities: Skylines 2 - C# Mod template
+﻿# Cities: Skylines 2 - Zoning Adjuster
 
-This repository template allows you to get started with Cities: Skylines 2 modding easily, all the way to building your mod on commit with GitHub Actions and publishing your mod automatically on Thunderstore.
+A mod to allow changing the zoning of roads.
 
 - [Requirements](#requirements)
 - [Usage](#usage)
@@ -18,25 +18,19 @@ This repository template allows you to get started with Cities: Skylines 2 moddi
 - (Optional) [dotnet-script](https://github.com/dotnet-script/dotnet-script) (for `rename.csx` helper script)
     - Installation `dotnet tool install -g dotnet-script`
 
-# Usage
+# Development
+
+## Usage
 
 - Create a new repository based on this one
 - Clone your new repository to your computer
-- Uncomment and update the `Cities2_Location` variable in `MyCoolMod.csproj`
+- Uncomment and update the `Cities2_Location` variable in `ZoningAdjusterModCS2.csproj`
 - Run `make build`
 
 After running the last command, the mod should be automatically copied to your game directory,
 so launching the game should include running the mod you just started :)
 
-# Renaming your project
-
-You can leverage the helper script in `scripts/rename.csx` in order to replace "MyCoolMod" with whatever you want to name your project. Usage:
-
-```
-$ dotnet script scripts\rename.csx "MyCoolMod" "AnotherModIMade"
-```
-
-# Incrementing version number
+## Incrementing version number
 
 - Update `.csproj` file with new version number
 - Update `thunderstore.toml` file with new version number
@@ -47,7 +41,7 @@ $ dotnet script scripts\rename.csx "MyCoolMod" "AnotherModIMade"
 - Push your changes + tags
     - `git push origin master --tags`
 
-# CI / GitHub Actions - Setup
+## CI / GitHub Actions - Setup
 
 In order to get the CI/GitHub Actions workflow to work, you have to do a couple of things.
 
@@ -57,7 +51,7 @@ In order to get the CI/GitHub Actions workflow to work, you have to do a couple 
 
 Now the CI job should work as expected :)
 
-# Regarding BepInEx version 5 (Stable) VS 6 (Alpha/Unstable/Nightly)
+## Regarding BepInEx version 5 (Stable) VS 6 (Alpha/Unstable/Nightly)
 
 Currently, this mod template defaults to building against BepInEx version 6 (unstable pre-release). If you'd like to instead use Stable BepInEx version 5, you can run the build like this:
 
