@@ -6,7 +6,6 @@ using Game.Prefabs;
 using Game.UI;
 using Unity.Collections;
 using Unity.Entities;
-using ZonePlacementMod.Components;
 using ZoningAdjusterMod.Utilties;
 
 namespace ZonePlacementMod.Systems {
@@ -25,12 +24,14 @@ namespace ZonePlacementMod.Systems {
         private string toolbarKGroup = "toolbar";
         private EnableZoneSystem enableZoneSystem;
         private PrefabSystem prefabSystem;
+        private bool roadToolbarOpen;
         protected override void OnCreate()
         {
             base.OnCreate();
 
             this.enableZoneSystem = World.GetExistingSystemManaged<EnableZoneSystem>();
             this.prefabSystem = World.GetExistingSystemManaged<PrefabSystem>();
+            this.roadToolbarOpen = false;
 
             this.AddUpdateBinding(new GetterValueBinding<string>(this.kGroup, "zoning_mode", () => enableZoneSystem.zoningMode.ToString()));
             this.AddUpdateBinding(new GetterValueBinding<bool>(this.kGroup, "upgrade_enabled", () => enableZoneSystem.upgradeEnabled));
@@ -38,15 +39,21 @@ namespace ZonePlacementMod.Systems {
 
             this.AddBinding(new TriggerBinding<string>(this.kGroup, "zoning_mode_update", zoningMode => {
                 Console.WriteLine($"Zoning mode updated to ${zoningMode}.");
-                this.enableZoneSystem.setZoningMode(zoningMode);
+                if (this.roadToolbarOpen) {
+                    this.enableZoneSystem.setZoningMode(zoningMode);
+                }
             }));
             this.AddBinding(new TriggerBinding<bool>(this.kGroup, "upgrade_enabled", upgrade_enabled => {
                 Console.WriteLine($"Upgrade Enabled updated to ${upgrade_enabled}.");
-                this.enableZoneSystem.setUpgradeEnabled(upgrade_enabled);
+                if (this.roadToolbarOpen) {
+                    this.enableZoneSystem.setUpgradeEnabled(upgrade_enabled);
+                }
             }));
             this.AddBinding(new TriggerBinding<bool>(this.kGroup, "apply_to_new_roads", shouldApply => {
                 Console.WriteLine($"Should Apply to new Roads updated to ${shouldApply}.");
-                this.enableZoneSystem.setShouldApplyToNewRoads(shouldApply);
+                if (this.roadToolbarOpen) {
+                    this.enableZoneSystem.setShouldApplyToNewRoads(shouldApply);
+                }
             }));
             this.AddBinding(new TriggerBinding<Entity>(toolbarKGroup, "selectAssetMenu", (Action<Entity>) (assetMenu =>
             {
@@ -70,11 +77,17 @@ namespace ZonePlacementMod.Systems {
 
                     if (expectedPrefabNames.Contains(prefabBase.name)) {
                         this.enableZoneSystem.setUpgradeEnabled(true);
+                        this.enableZoneSystem.setShouldApplyToNewRoads(true);
+                        this.roadToolbarOpen = true;
+                        objects.Dispose();
                         return;
                     }
                 }
 
+                this.roadToolbarOpen = false;
                 this.enableZoneSystem.setUpgradeEnabled(false);
+                this.enableZoneSystem.setShouldApplyToNewRoads(false);
+                objects.Dispose();
             })));
         }
     }

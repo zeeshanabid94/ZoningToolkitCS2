@@ -1955,11 +1955,11 @@
     };
     enabledButtonClicked = () => {
       console.log(`Button clicked. Enabled ${this.state.isEnabled}`);
-      sendDataToCSharp(("zoning_adjuster_ui_namespace", "apply_to_new_roads", !this.state.isEnabled));
+      sendDataToCSharp("zoning_adjuster_ui_namespace", "apply_to_new_roads", !this.state.isEnabled);
     };
     upgradeEnabledButtonClicked = () => {
       console.log(`Button clicked. Upgrade Enabled ${this.state.isUpgradeEnabled}`);
-      sendDataToCSharp(("zoning_adjuster_ui_namespace", "upgrade_enabled", !this.state.isUpgradeEnabled));
+      sendDataToCSharp("zoning_adjuster_ui_namespace", "upgrade_enabled", !this.state.isUpgradeEnabled);
     };
     renderZoningModeButton(zoningMode, style) {
       return /* @__PURE__ */ import_react.default.createElement(
@@ -2030,7 +2030,7 @@
         flexDirection: "row"
       };
       const { isVisible } = this.state;
-      return /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, isVisible && /* @__PURE__ */ import_react.default.createElement(
+      return /* @__PURE__ */ import_react.default.createElement(
         "div",
         {
           style: windowStyle
@@ -2044,10 +2044,7 @@
           "X"
         ),
         /* @__PURE__ */ import_react.default.createElement("div", { style: columnStyle }, /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1 } }, this.renderZoningModeButton("Left", leftButtonStyle), this.renderZoningModeButton("Right", rightButtonStyle), this.renderZoningModeButton("Default", defaultButtonStyle), this.renderZoningModeButton("None", noneButtonStyle)), /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1 } }, this.renderButton("Enabled", enabledButtonStyle, this.enabledButtonClicked), this.renderButton("UpgradeEnabled", upgradeEnabledStyle, this.upgradeEnabledButtonClicked)))
-      ));
-    }
-    get_zoning_mode() {
-      console.log("Getting zoning mode.");
+      );
     }
   };
   function updateEventFromCSharp(event, callback) {

@@ -1,3 +1,8 @@
+# 0.4.0
+- Fixed UI to allow enable/disable of upgrade mode.
+- Fixed UI to allow enable and disable of Mod.
+- Removed close button.
+
 # 0.3.3
 
 Initial Release

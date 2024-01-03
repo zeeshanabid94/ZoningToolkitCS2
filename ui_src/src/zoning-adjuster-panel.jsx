@@ -34,10 +34,6 @@ class ZoningAdjusterPanel extends React.Component {
         this.unsub_upgrade_enabled();
     }
 
-    handleClose = () => {
-        this.setState({ isVisible: false });
-    }
-
     selectZoningMode = (zoningMode) => {
         console.log(`Button clicked. Zoning mode ${zoningMode}`);
         sendDataToCSharp('zoning_adjuster_ui_namespace', 'zoning_mode_update', zoningMode);
@@ -45,12 +41,12 @@ class ZoningAdjusterPanel extends React.Component {
 
     enabledButtonClicked = () => {
         console.log(`Button clicked. Enabled ${this.state.isEnabled}`);
-        sendDataToCSharp(('zoning_adjuster_ui_namespace', 'apply_to_new_roads', !this.state.isEnabled));
+        sendDataToCSharp('zoning_adjuster_ui_namespace', 'apply_to_new_roads', !this.state.isEnabled);
     }
 
     upgradeEnabledButtonClicked = () => {
         console.log(`Button clicked. Upgrade Enabled ${this.state.isUpgradeEnabled}`);
-        sendDataToCSharp(('zoning_adjuster_ui_namespace', 'upgrade_enabled', !this.state.isUpgradeEnabled));
+        sendDataToCSharp('zoning_adjuster_ui_namespace', 'upgrade_enabled', !this.state.isUpgradeEnabled);
     }
 
     renderZoningModeButton(zoningMode, style) {
@@ -140,40 +136,24 @@ class ZoningAdjusterPanel extends React.Component {
 
         // Apply the styles to the elements
         return (
-            <>
-                {isVisible && (
-                    <div 
-                        style={windowStyle}
-                    >
-                        <button 
-                            style={closeButtonStyle}
-                            onClick={this.handleClose} // Assuming you have a method to handle the close action
-                        >
-                            X
-                        </button>
-                        <div style={columnStyle}>
-                            <div style={{ flex: 1}}>
-                                {this.renderZoningModeButton("Left", leftButtonStyle)}
-                                {this.renderZoningModeButton("Right", rightButtonStyle)}
-                                {this.renderZoningModeButton("Default", defaultButtonStyle)}
-                                {this.renderZoningModeButton("None", noneButtonStyle)}
-                            </div>
-
-                            <div style={{ flex: 1}}>
-                                {this.renderButton("Enabled", enabledButtonStyle, this.enabledButtonClicked)}
-                                {this.renderButton("UpgradeEnabled", upgradeEnabledStyle, this.upgradeEnabledButtonClicked)}
-                            </div>
-                        </div>
+            <div 
+                style={windowStyle}
+            >
+                <div style={columnStyle}>
+                    <div style={{ flex: 1}}>
+                        {this.renderZoningModeButton("Left", leftButtonStyle)}
+                        {this.renderZoningModeButton("Right", rightButtonStyle)}
+                        {this.renderZoningModeButton("Default", defaultButtonStyle)}
+                        {this.renderZoningModeButton("None", noneButtonStyle)}
                     </div>
-                )}
-            </>
-            
+
+                    <div style={{ flex: 1}}>
+                        {this.renderButton("Enabled", enabledButtonStyle, this.enabledButtonClicked)}
+                        {this.renderButton("UpgradeEnabled", upgradeEnabledStyle, this.upgradeEnabledButtonClicked)}
+                    </div>
+                </div>
+            </div>
         );
-    }
-
-    get_zoning_mode() {
-        console.log("Getting zoning mode.");
-
     }
 }
 

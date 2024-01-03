@@ -1,24 +1,19 @@
 using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using Colossal.Mathematics;
 using Game;
 using Game.Common;
 using Game.Net;
-using Game.Prefabs;
 using Game.Tools;
 using Game.Zones;
-using HarmonyLib;
 using Unity.Burst;
 using Unity.Burst.Intrinsics;
 using Unity.Collections;
 using Unity.Entities;
-using Unity.Entities.UniversalDelegates;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.PlayerLoop;
 using ZonePlacementMod.Components;
 using ZoningAdjusterMod.Utilties;
 
@@ -29,9 +24,6 @@ namespace ZonePlacementMod.Systems
     public class EnableZoneSystem: GameSystemBase {
 
         private EntityQuery updatedEntityQuery;
-        // private EntityQuery createdEdgesQuery;
-        // private EntityQuery updatedEdgeQuery;
-        // private EntityQuery deleteEdgeQuery;
 
         private ComponentTypeHandle<Block> blockComponentTypeHandle;
         private EntityTypeHandle entityTypeHandle;
@@ -53,9 +45,7 @@ namespace ZonePlacementMod.Systems
         private NetToolSystem netToolSystem;
         private ToolRaycastSystem raycastSystem;
         public ZoningMode zoningMode;
-
         public bool upgradeEnabled;
-
         public bool shouldApplyToNewRoads;
 
         protected override void OnCreate() {
@@ -75,37 +65,6 @@ namespace ZonePlacementMod.Systems
                     ComponentType.ReadOnly<Deleted>()
                 ]
             });
-            // this.createdEdgesQuery = this.GetEntityQuery(new EntityQueryDesc() {
-            //     All = [
-            //         ComponentType.ReadOnly<Curve>(),
-            //         ComponentType.ReadOnly<Created>(),
-            //         ComponentType.ReadOnly<Road>(),
-            //         ComponentType.ReadOnly<Updated>(),
-            //         ComponentType.ReadOnly<Edge>(),
-            //         ComponentType.ReadOnly<Composition>()
-            //     ],
-            //     None = [
-            //         ComponentType.ReadOnly<Temp>()
-            //     ]
-            // });
-            // this.updatedEdgeQuery = this.GetEntityQuery(new EntityQueryDesc() {
-            //     All = [
-            //         ComponentType.ReadOnly<Curve>(),
-            //         ComponentType.ReadOnly<Updated>(),
-            //         ComponentType.ReadOnly<Edge>()
-            //     ],
-            //     None = [
-            //         ComponentType.ReadOnly<Created>(),
-            //     ]
-            // });
-
-            // this.deleteEdgeQuery = this.GetEntityQuery(new EntityQueryDesc() {
-            //     All = [
-            //         ComponentType.ReadOnly<Curve>(),
-            //         ComponentType.ReadOnly<Edge>(),
-            //         ComponentType.ReadOnly<Deleted>()
-            //     ]
-            // });
             
             // Component to use
             this.blockComponentTypeHandle = this.GetComponentTypeHandle<Block>();
@@ -154,16 +113,6 @@ namespace ZonePlacementMod.Systems
             Console.WriteLine("*************Printing updated blocks.*************");
             this.listEntityComponentsInQuery(this.updatedEntityQuery);
 
-            // Console.WriteLine("*************Printing created edges.*************");
-            // this.listEntityComponentsInQuery(this.createdEdgesQuery);
-
-            // Console.WriteLine("*************Printing updated edges.*************");
-            // this.listEntityComponentsInQuery(this.updatedEdgeQuery);
-
-            // Console.WriteLine("*************Printing deleted edges.*************");
-            // this.listEntityComponentsInQuery(this.deleteEdgeQuery);
-
-
             NativeParallelHashMap<float2, Entity> deletedEntitiesByStartPoint = new NativeParallelHashMap<float2, Entity>(32, Allocator.Temp);
             NativeParallelHashMap<float2, Entity> deletedEntitiesByEndPoint = new NativeParallelHashMap<float2, Entity>(32, Allocator.Temp);
 
@@ -177,7 +126,7 @@ namespace ZonePlacementMod.Systems
             }.Schedule(this.updatedEntityQuery, this.Dependency);
             this.Dependency = JobHandle.CombineDependencies(collectDeletedEntities, this.Dependency);
 
-            if (netToolSystem.actualMode != NetToolSystem.Mode.Replace) {
+            if (netToolSystem.actualMode != NetToolSystem.Mode.Replace && this.shouldApplyToNewRoads) {
                 JobHandle jobHandle = new UpdateZoneData() {
                     blockComponentTypeHandle = this.blockComponentTypeHandle,
                     validAreaComponentTypeHandle = this.validAreaComponentTypeHandle,
@@ -196,7 +145,7 @@ namespace ZonePlacementMod.Systems
                     upgradedEntity = null
                 }.Schedule(this.updatedEntityQuery, this.Dependency);
                 this.Dependency = JobHandle.CombineDependencies(this.Dependency, jobHandle);
-            } else {
+            } else if (netToolSystem.actualMode == NetToolSystem.Mode.Replace && this.upgradeEnabled) {
                 raycastSystem.GetRaycastResult(out RaycastResult result);
 
                 if (result.m_Owner != null) {
@@ -453,7 +402,6 @@ namespace ZonePlacementMod.Systems
                         // entityCommandBuffer.RemoveComponent<Updated>(entity);
                         // entityCommandBuffer.RemoveComponent<Created>(entity);
                     
-                        validArea.m_Area.y = 0;
                         validArea.m_Area.w = 0;
 
                         entityCommandBuffer.SetComponent(entity, validArea);
