@@ -78,7 +78,7 @@ class ZoningAdjusterPanel extends React.Component {
             border: '1px solid #ccc',
             padding: '20px',
             width: 'auto',
-            margin: '20px auto',
+            margin: '15px auto',
             textAlign: 'center',
             transition: 'box-shadow 0.3s ease-in-out',
             pointerEvents: 'auto'
@@ -139,18 +139,11 @@ class ZoningAdjusterPanel extends React.Component {
             <div 
                 style={windowStyle}
             >
-                <div style={columnStyle}>
-                    <div style={{ flex: 1}}>
-                        {this.renderZoningModeButton("Left", leftButtonStyle)}
-                        {this.renderZoningModeButton("Right", rightButtonStyle)}
-                        {this.renderZoningModeButton("Default", defaultButtonStyle)}
-                        {this.renderZoningModeButton("None", noneButtonStyle)}
-                    </div>
-
-                    <div style={{ flex: 1}}>
-                        {this.renderButton("Enabled", enabledButtonStyle, this.enabledButtonClicked)}
-                        {this.renderButton("UpgradeEnabled", upgradeEnabledStyle, this.upgradeEnabledButtonClicked)}
-                    </div>
+                <div>
+                    {this.renderZoningModeButton("Left", leftButtonStyle)}
+                    {this.renderZoningModeButton("Right", rightButtonStyle)}
+                    {this.renderZoningModeButton("Default", defaultButtonStyle)}
+                    {this.renderZoningModeButton("None", noneButtonStyle)}
                 </div>
             </div>
         );

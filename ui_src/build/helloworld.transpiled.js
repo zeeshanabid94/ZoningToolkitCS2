@@ -1946,9 +1946,6 @@
       this.unsub_enabled();
       this.unsub_upgrade_enabled();
     }
-    handleClose = () => {
-      this.setState({ isVisible: false });
-    };
     selectZoningMode = (zoningMode) => {
       console.log(`Button clicked. Zoning mode ${zoningMode}`);
       sendDataToCSharp("zoning_adjuster_ui_namespace", "zoning_mode_update", zoningMode);
@@ -1986,7 +1983,7 @@
         border: "1px solid #ccc",
         padding: "20px",
         width: "auto",
-        margin: "20px auto",
+        margin: "15px auto",
         textAlign: "center",
         transition: "box-shadow 0.3s ease-in-out",
         pointerEvents: "auto"
@@ -2035,15 +2032,7 @@
         {
           style: windowStyle
         },
-        /* @__PURE__ */ import_react.default.createElement(
-          "button",
-          {
-            style: closeButtonStyle,
-            onClick: this.handleClose
-          },
-          "X"
-        ),
-        /* @__PURE__ */ import_react.default.createElement("div", { style: columnStyle }, /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1 } }, this.renderZoningModeButton("Left", leftButtonStyle), this.renderZoningModeButton("Right", rightButtonStyle), this.renderZoningModeButton("Default", defaultButtonStyle), this.renderZoningModeButton("None", noneButtonStyle)), /* @__PURE__ */ import_react.default.createElement("div", { style: { flex: 1 } }, this.renderButton("Enabled", enabledButtonStyle, this.enabledButtonClicked), this.renderButton("UpgradeEnabled", upgradeEnabledStyle, this.upgradeEnabledButtonClicked)))
+        /* @__PURE__ */ import_react.default.createElement("div", null, this.renderZoningModeButton("Left", leftButtonStyle), this.renderZoningModeButton("Right", rightButtonStyle), this.renderZoningModeButton("Default", defaultButtonStyle), this.renderZoningModeButton("None", noneButtonStyle))
       );
     }
   };

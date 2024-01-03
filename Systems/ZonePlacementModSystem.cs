@@ -126,7 +126,7 @@ namespace ZonePlacementMod.Systems
             }.Schedule(this.updatedEntityQuery, this.Dependency);
             this.Dependency = JobHandle.CombineDependencies(collectDeletedEntities, this.Dependency);
 
-            if (netToolSystem.actualMode != NetToolSystem.Mode.Replace && this.shouldApplyToNewRoads) {
+            if (netToolSystem.actualMode != NetToolSystem.Mode.Replace) {
                 JobHandle jobHandle = new UpdateZoneData() {
                     blockComponentTypeHandle = this.blockComponentTypeHandle,
                     validAreaComponentTypeHandle = this.validAreaComponentTypeHandle,
@@ -145,7 +145,7 @@ namespace ZonePlacementMod.Systems
                     upgradedEntity = null
                 }.Schedule(this.updatedEntityQuery, this.Dependency);
                 this.Dependency = JobHandle.CombineDependencies(this.Dependency, jobHandle);
-            } else if (netToolSystem.actualMode == NetToolSystem.Mode.Replace && this.upgradeEnabled) {
+            } else {
                 raycastSystem.GetRaycastResult(out RaycastResult result);
 
                 if (result.m_Owner != null) {
