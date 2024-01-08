@@ -278,8 +278,9 @@ namespace ZonePlacementMod.Systems
                             Curve curve = this.curveComponentLookup[owner.m_Owner];
 
                             if (!appliedLookup.HasComponent(owner.m_Owner)) {
-                                // Do nothing if no owner was applied to.
-                                continue;
+                                if (zoningInfoComponentLookup.HasComponent(owner.m_Owner)) {
+                                    entityZoningInfo = this.zoningInfoComponentLookup[owner.m_Owner];
+                                }
                             }
                             if (createdLookup.HasComponent(owner.m_Owner)) {
                                     Entity startDeletedEntity;
@@ -340,6 +341,7 @@ namespace ZonePlacementMod.Systems
 
                             Console.WriteLine($"Block direction ${block.m_Direction}");
                             Console.WriteLine($"Block position ${block.m_Position}");
+                            Console.WriteLine($"Valid Area: ${validArea.m_Area}");
 
                             MathUtils.Distance(curve.m_Bezier.xz, block.m_Position.xz, out float closest_point_t);
 

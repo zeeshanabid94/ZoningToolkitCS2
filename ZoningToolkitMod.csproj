@@ -12,7 +12,7 @@
 		<AssemblyName>ZoningToolkitMod</AssemblyName>
 		<RootNamespace>ZoningToolkitMod</RootNamespace>
 		<Description>A mod to adjust zoning in CS 2</Description>
-		<Version>0.4.4</Version>
+		<Version>0.5.0</Version>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
 		<RestoreAdditionalProjectSources>
