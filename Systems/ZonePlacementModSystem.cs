@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Colossal.Mathematics;
@@ -15,7 +15,7 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
 using ZonePlacementMod.Components;
-using ZoningAdjusterMod.Utilties;
+using ZoningToolkitMod.Utilties;
 
 namespace ZonePlacementMod.Systems
 {
@@ -52,18 +52,18 @@ namespace ZonePlacementMod.Systems
             base.OnCreate();
 
             this.updatedEntityQuery = this.GetEntityQuery(new EntityQueryDesc() {
-                All = [
+                All = new ComponentType[] {
                     ComponentType.ReadWrite<Block>(),
                     ComponentType.ReadWrite<Owner>(),
                     ComponentType.ReadOnly<Cell>(),
                     ComponentType.ReadOnly<ValidArea>()
-                ],
-                Any = [
+                },
+                Any = new ComponentType[] {
                     ComponentType.ReadOnly<Updated>(),
                     ComponentType.ReadOnly<Applied>(),
                     ComponentType.ReadOnly<Created>(),
                     ComponentType.ReadOnly<Deleted>()
-                ]
+                }
             });
             
             // Component to use

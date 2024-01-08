@@ -8,14 +8,14 @@ using HarmonyLib;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
-using ZoningAdjusterMod;
+using ZoningToolkitMod;
 using HookUILib.Core;
 
 #if BEPINEX_V6
     using BepInEx.Unity.Mono;
 #endif
 
-namespace ZoningAdjusterModPlugin
+namespace ZoningToolkitModPlugin
 {
     public class ZonePlacementModUI : UIExtension {
         public new readonly ExtensionType extensionType = ExtensionType.Panel;
@@ -23,7 +23,7 @@ namespace ZoningAdjusterModPlugin
         public new readonly string extensionContent;
         
         public ZonePlacementModUI() {
-            extensionContent = LoadEmbeddedResource("ZoningAdjusterMod.ui_src.build.helloworld.transpiled.js");
+            extensionContent = LoadEmbeddedResource("ZoningToolkitMod.ui_src.build.helloworld.transpiled.js");
         }
     }
 

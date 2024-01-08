@@ -1913,9 +1913,9 @@
   // src/index.jsx
   var import_react2 = __toESM(require_react());
 
-  // src/zoning-adjuster-panel.jsx
+  // src/zoning-toolkit-panel.jsx
   var import_react = __toESM(require_react());
-  var ZoningAdjusterPanel = class extends import_react.default.Component {
+  var ZoningToolkitPanel = class extends import_react.default.Component {
     constructor(props) {
       super(props);
       this.state = {
@@ -2052,10 +2052,10 @@
     console.log("Event triggered.");
     engine.trigger(namespace + "." + event, newValue);
   }
-  var zoning_adjuster_panel_default = ZoningAdjusterPanel;
+  var zoning_toolkit_panel_default = ZoningToolkitPanel;
 
   // src/index.jsx
-  var ZoningAdjusterUI = () => {
+  var ZoningToolkitUI = () => {
     const style = {
       position: "absolute",
       top: 100,
@@ -2068,13 +2068,13 @@
       border: "none"
       // Removing any border or outline
     };
-    return /* @__PURE__ */ import_react2.default.createElement("div", { id: "UI", style }, /* @__PURE__ */ import_react2.default.createElement(zoning_adjuster_panel_default, null));
+    return /* @__PURE__ */ import_react2.default.createElement("div", { id: "UI", style }, /* @__PURE__ */ import_react2.default.createElement(zoning_toolkit_panel_default, null));
   };
   window._$hookui.registerPanel({
     id: "zoning.adjuster",
     name: "Zoning Adjuster",
     icon: "Media/Game/Icons/Zones.svg",
-    component: ZoningAdjusterUI
+    component: ZoningToolkitUI
   });
 })();
 /*! Bundled license information:

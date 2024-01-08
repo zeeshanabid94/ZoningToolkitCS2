@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Colossal.Entities;
 using Colossal.UI.Binding;
@@ -6,11 +6,11 @@ using Game.Prefabs;
 using Game.UI;
 using Unity.Collections;
 using Unity.Entities;
-using ZoningAdjusterMod.Utilties;
+using ZoningToolkitMod.Utilties;
 
 namespace ZonePlacementMod.Systems {
     class ZonePlacementModUISystem: UISystemBase {
-        private static HashSet<String> expectedPrefabNames = [
+        private static readonly HashSet<String> expectedPrefabNames = new HashSet<String> {
             "RoadsHighways",
             "RoadsLargeRoads",
             "RoadsMediumRoads",
@@ -19,7 +19,7 @@ namespace ZonePlacementMod.Systems {
             "RoadsIntersections",
             "RoadsParking",
             "RoadsRoundabouts"
-        ];
+        };
         private string kGroup = "zoning_adjuster_ui_namespace";
         private string toolbarKGroup = "toolbar";
         private EnableZoneSystem enableZoneSystem;

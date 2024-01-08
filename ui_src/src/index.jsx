@@ -1,7 +1,7 @@
-import React from 'react';
-import ZoningAdjusterPanel from './zoning-adjuster-panel';
+﻿import React from 'react';
+import ZoningToolkitPanel from './zoning-toolkit-panel';
 
-const ZoningAdjusterUI = () => {
+const ZoningToolkitUI = () => {
     const style = {
         position: "absolute",
         top: 100,
@@ -12,7 +12,7 @@ const ZoningAdjusterUI = () => {
         border: "none", // Removing any border or outline
     }
     return <div id="UI" style={style}>
-        <ZoningAdjusterPanel />
+        <ZoningToolkitPanel />
     </div>
 }
 
@@ -20,5 +20,5 @@ window._$hookui.registerPanel({
     id: "zoning.adjuster",
     name: "Zoning Adjuster",
     icon: "Media/Game/Icons/Zones.svg",
-    component: ZoningAdjusterUI
+    component: ZoningToolkitUI
 })

@@ -9,10 +9,10 @@
 
 	<PropertyGroup>
 		<TargetFramework>netstandard2.1</TargetFramework>
-		<AssemblyName>ZoningAdjusterMod</AssemblyName>
-		<RootNamespace>ZoningAdjusterMod</RootNamespace>
+		<AssemblyName>ZoningToolkitMod</AssemblyName>
+		<RootNamespace>ZoningToolkitMod</RootNamespace>
 		<Description>A mod to adjust zoning in CS 2</Description>
-		<Version>0.4.0</Version>
+		<Version>0.4.3</Version>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
 		<RestoreAdditionalProjectSources>

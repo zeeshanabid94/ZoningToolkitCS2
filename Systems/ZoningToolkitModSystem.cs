@@ -1,4 +1,4 @@
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using Game;
 using Game.Common;
 using Game.Events;
@@ -9,13 +9,13 @@ using Unity.Entities;
 using Unity.Entities.UniversalDelegates;
 using Unity.Jobs;
 using UnityEngine.PlayerLoop;
-using ZoningAdjusterMod.Iterators;
+using ZoningToolkitMod.Iterators;
 using SearchSystem = Game.Zones.SearchSystem;
 
-namespace ZoningAdjusterMod.Systems {
+namespace ZoningToolkitMod.Systems {
     [UpdateAfter(typeof(BlockSystem))]
     [CompilerGenerated]
-    public class ZoningAdjusterModSystem : GameSystemBase
+    public class ZoningToolkitModSystem : GameSystemBase
     {
         private EntityQuery deletedEntityQuery;
         private EntityQuery createdEntityQuery;
@@ -28,25 +28,25 @@ namespace ZoningAdjusterMod.Systems {
             base.OnCreate();
 
             deletedEntityQuery = this.GetEntityQuery(new EntityQueryDesc() {
-                All = [
+                All = new ComponentType[] {
                     ComponentType.ReadOnly<EdgeGeometry>(),
                     ComponentType.ReadOnly<Edge>(),
                     ComponentType.ReadOnly<Deleted>()
-                ]
+                }
             });
             createdEntityQuery = this.GetEntityQuery(new EntityQueryDesc() {
-                All = [
+                All = new ComponentType[] {
                     ComponentType.ReadOnly<EdgeGeometry>(),
                     ComponentType.ReadOnly<Edge>(),
                     ComponentType.ReadOnly<Created>()
-                ]
+                }
             });
             updatedEntityQuery = this.GetEntityQuery(new EntityQueryDesc() {
-                All = [
+                All = new ComponentType[] {
                     ComponentType.ReadOnly<EdgeGeometry>(),
                     ComponentType.ReadOnly<Edge>(),
                     ComponentType.ReadOnly<Updated>()
-                ]
+                }
             });
 
             blockSearchSystem = World.GetExistingSystemManaged<SearchSystem>();

@@ -1,6 +1,6 @@
-import React from 'react';
+﻿import React from 'react';
 
-class ZoningAdjusterPanel extends React.Component {
+class ZoningToolkitPanel extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -169,4 +169,4 @@ function sendDataToCSharp(namespace, event, newValue) {
     engine.trigger(namespace + "." + event, newValue);
 }
 
-export default ZoningAdjusterPanel;
+export default ZoningToolkitPanel;

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Colossal.IO.AssetDatabase.Internal;
 using Game.Common;
 using Game.Net;
@@ -7,7 +7,7 @@ using Unity.Collections;
 using Unity.Entities;
 using ZonePlacementMod.Systems;
 
-namespace ZoningAdjusterMod.Utilties {
+namespace ZoningToolkitMod.Utilties {
     public static class EntityUtils {
         public static void listEntityComponents(this EnableZoneSystem gameSystemBase, Entity entity) {
             gameSystemBase.EntityManager.GetComponentTypes(entity).ForEach(compoenentType => {

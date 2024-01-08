@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Colossal.Collections;
 using Colossal.Mathematics;
 using Game.Common;
@@ -8,7 +8,7 @@ using HarmonyLib;
 using Unity.Collections;
 using Unity.Entities;
 
-namespace ZoningAdjusterMod.Iterators {
+namespace ZoningToolkitMod.Iterators {
     public struct FindBlocksIterator
         : INativeQuadTreeIterator<Entity, Bounds2>,
         IUnsafeQuadTreeIterator<Entity, Bounds2>

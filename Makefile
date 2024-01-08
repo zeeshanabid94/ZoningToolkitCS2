@@ -1,4 +1,4 @@
-all: build
+﻿all: build
 BEPINEX_VERSION = 6
 
 clean:
@@ -13,11 +13,11 @@ build: clean restore
 package-win:
 	@-mkdir dist
 	@cmd /c copy /y "bin\Debug\netstandard2.1\0Harmony.dll" "dist\"
-	@cmd /c copy /y "bin\Debug\netstandard2.1\ZoningAdjusterMod.dll" "dist\"
+	@cmd /c copy /y "bin\Debug\netstandard2.1\ZoningToolkitMod.dll" "dist\"
 	@echo Packaged to dist/
 
 package-unix: build
 	@-mkdir dist
 	@cp bin/Debug/netstandard2.1/0Harmony.dll dist
-	@cp bin/Debug/netstandard2.1/ZoningAdjusterMod.dll dist
+	@cp bin/Debug/netstandard2.1/ZoningToolkitMod.dll dist
 	@echo Packaged to dist/

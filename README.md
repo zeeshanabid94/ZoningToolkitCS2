@@ -22,7 +22,7 @@ A mod to allow changing the zoning of roads.
 - Depending on your BepInEx version download the relevant file:
     - BepInEx 5: Download build-with-5
     - BepInEx 6: Download build-with-6
-- Create a ZoningAdjusterMod folder in BepInEx/Plugins folder
+- Create a ZoningToolkitMod folder in BepInEx/Plugins folder
 - Copy the unzipped files into the plugins folder
 
 # Reporting Issues
@@ -35,7 +35,7 @@ Also, a logfile would also be nice to debug any issues.
 
 - Create a new repository based on this one
 - Clone your new repository to your computer
-- Uncomment and update the `Cities2_Location` variable in `ZoningAdjusterModCS2.csproj`
+- Uncomment and update the `Cities2_Location` variable in `ZoningToolkitModCS2.csproj`
 - Run `make build`
 
 After running the last command, the mod should be automatically copied to your game directory,
