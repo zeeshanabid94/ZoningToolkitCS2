@@ -1,4 +1,4 @@
-﻿# Cities: Skylines 2 - Zoning Adjuster
+﻿# Cities: Skylines 2 - Zoning Toolkit
 
 A mod to allow changing the zoning of roads.
 
