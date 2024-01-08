@@ -56,7 +56,7 @@
 		Make sure you have a private `libcs2` repository with the appropriate DLLs for this to work.
 		DO NOT make the proprietary DLLs for the game public, as the files are owned by PDX/CO. 
 	-->
-	<ItemGroup Condition="'$(CI)' != 'true'">
+	<ItemGroup Condition="'$(CI)' == 'true'">
 		<Reference Include="libcs2/Colossal.*.dll" Private="False"/>
 		<Reference Include="libcs2/Game.dll" Private="False"/>
 		<Reference Include="libcs2/Unity.*.dll" Private="False"/>
