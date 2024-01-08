@@ -12,7 +12,7 @@
 		<AssemblyName>ZoningToolkitMod</AssemblyName>
 		<RootNamespace>ZoningToolkitMod</RootNamespace>
 		<Description>A mod to adjust zoning in CS 2</Description>
-		<Version>0.4.3</Version>
+		<Version>0.4.4</Version>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
 		<RestoreAdditionalProjectSources>
@@ -56,7 +56,7 @@
 		Make sure you have a private `libcs2` repository with the appropriate DLLs for this to work.
 		DO NOT make the proprietary DLLs for the game public, as the files are owned by PDX/CO. 
 	-->
-	<ItemGroup>
+	<ItemGroup Condition="'$(CI)' != 'true'">
 		<Reference Include="libcs2/Colossal.*.dll" Private="False"/>
 		<Reference Include="libcs2/Game.dll" Private="False"/>
 		<Reference Include="libcs2/Unity.*.dll" Private="False"/>

@@ -5,7 +5,7 @@ const ZoningToolkitUI = () => {
     const style = {
         position: "absolute",
         top: 100,
-        left: 100,
+        right: 100,
         color: "white",
         backgroundColor: "rgba(173, 216, 230, 0.75)", // Light blue with 75% opacity
         borderRadius: "10px", // Rounded edges
