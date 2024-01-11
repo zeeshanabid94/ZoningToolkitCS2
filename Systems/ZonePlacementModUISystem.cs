@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using Colossal.Entities;
 using Colossal.UI.Binding;
 using Game.Prefabs;
+using Game.SceneFlow;
+using Game.Tools;
 using Game.UI;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
 using ZoningToolkitMod.Utilties;
 
 namespace ZonePlacementMod.Systems {
@@ -24,62 +27,166 @@ namespace ZonePlacementMod.Systems {
         private string toolbarKGroup = "toolbar";
         private EnableZoneSystem enableZoneSystem;
         private PrefabSystem prefabSystem;
-        private bool roadToolbarOpen;
+
+        private bool activateModUI = false;
+        private bool deactivateModUI = false;
+        private bool modUIVisible = false;
+        private bool2 isNetToolAndRoadPrefab = new bool2(false, false);
+        GetterValueBinding<bool> visible;
+
+        private List<IUpdateBinding> toUIBindings;
+        private List<IBinding> fromUIBindings;
+        private ToolSystem toolSystem;
+
         protected override void OnCreate()
         {
             base.OnCreate();
 
             this.enableZoneSystem = World.GetExistingSystemManaged<EnableZoneSystem>();
+            this.toolSystem = World.GetOrCreateSystemManaged<ToolSystem>();
             this.prefabSystem = World.GetExistingSystemManaged<PrefabSystem>();
-            this.roadToolbarOpen = false;
+            this.toUIBindings = new List<IUpdateBinding>();
+            this.fromUIBindings = new List<IBinding>();
 
-            this.AddUpdateBinding(new GetterValueBinding<string>(this.kGroup, "zoning_mode", () => enableZoneSystem.zoningMode.ToString()));
-            this.AddUpdateBinding(new GetterValueBinding<bool>(this.kGroup, "upgrade_enabled", () => enableZoneSystem.upgradeEnabled));
+            this.toolSystem.EventPrefabChanged = (Action<PrefabBase>) Delegate.Combine(toolSystem.EventPrefabChanged, new Action<PrefabBase>(OnPrefabChanged));
+            this.toolSystem.EventToolChanged = (Action<ToolBaseSystem>)Delegate.Combine(toolSystem.EventToolChanged, new Action<ToolBaseSystem>(OnToolChange));
+        }
 
-            this.AddBinding(new TriggerBinding<string>(this.kGroup, "zoning_mode_update", zoningMode => {
-                Console.WriteLine($"Zoning mode updated to ${zoningMode}.");
-                if (this.roadToolbarOpen) {
-                    this.enableZoneSystem.setZoningMode(zoningMode);
-                }
-            }));
-            this.AddBinding(new TriggerBinding<bool>(this.kGroup, "upgrade_enabled", upgrade_enabled => {
-                Console.WriteLine($"Upgrade Enabled updated to ${upgrade_enabled}.");
-                if (this.roadToolbarOpen) {
-                    this.enableZoneSystem.setUpgradeEnabled(upgrade_enabled);
-                }
-            }));
-            this.AddBinding(new TriggerBinding<Entity>(toolbarKGroup, "selectAssetMenu", (Action<Entity>) (assetMenu =>
-            {
-                Entity menuEntity = assetMenu;
-                DynamicBuffer<UIGroupElement> buffer;
-                if (menuEntity == Entity.Null
-                    || !this.EntityManager.HasComponent<UIAssetMenuData>(menuEntity)
-                    || !this.EntityManager.TryGetBuffer<UIGroupElement>(menuEntity, true, out buffer))
-                    return;
-                this.listEntityComponents(menuEntity);
+        private void OnToolChange(ToolBaseSystem tool) {
+            Console.WriteLine("Tool changed!");
 
-                NativeList<UIObjectInfo> objects = UIObjectInfo.GetObjects(this.EntityManager, buffer, Allocator.TempJob);
+            if (tool is NetToolSystem) {
+                isNetToolAndRoadPrefab.y = true;
+            } else {
+                isNetToolAndRoadPrefab.y = false;
+            }
 
-                for (int index = 0; index < objects.Length; ++index) {
-                    UIObjectInfo uiObjectInfo = objects[index];
-                    Entity objectInfoEntity = uiObjectInfo.entity;
-                    PrefabData uiInfoPrefab = uiObjectInfo.prefabData;
-                    PrefabBase prefabBase = prefabSystem.GetPrefab<PrefabBase>(uiInfoPrefab);
+            if (isNetToolAndRoadPrefab.x == true && isNetToolAndRoadPrefab.y == true) {
+                activateModUI = true;
+            } else {
+                deactivateModUI = true;
+            }
+        }
 
-                    Console.WriteLine($"Prefab name: {prefabBase.name}");
+        private void OnPrefabChanged(PrefabBase prefabBase) {
+            Console.WriteLine("Prefab changed!");
 
-                    if (expectedPrefabNames.Contains(prefabBase.name)) {
-                        this.enableZoneSystem.setUpgradeEnabled(true);
-                        this.roadToolbarOpen = true;
-                        objects.Dispose();
-                        return;
+            // if (toolSystem.activeTool is NetToolSystem) {
+            //     NetToolSystem netToolSystem = (NetToolSystem) toolSystem.activeTool;
+            
+                if (toolSystem.activePrefab is RoadPrefab) {
+                    Console.WriteLine("Prefab is RoadPrefab!");
+                    RoadPrefab roadPrefab = (RoadPrefab) toolSystem.activePrefab;
+                    Console.WriteLine($"Road prefab information.");
+                    Console.WriteLine($"Road Type {roadPrefab.m_RoadType}.");
+                    Console.WriteLine($"Road Zone Block {roadPrefab.m_ZoneBlock}.");
+
+                    // HashSet<ComponentType> componentSet = new HashSet<ComponentType>();
+                    // roadPrefab.GetPrefabComponents(componentSet);
+
+                    // Console.WriteLine($"Component type set contains RoadData {componentSet.Contains(ComponentType.ReadWrite<RoadData>())}");
+
+                    if (roadPrefab.m_ZoneBlock != null) {
+                        isNetToolAndRoadPrefab.x = true;
+                    } else {
+                        isNetToolAndRoadPrefab.x = false;
                     }
+                } else {
+                    Console.WriteLine("Prefab is not RoadPrefab!");
+                    isNetToolAndRoadPrefab.x = false;
                 }
 
-                this.roadToolbarOpen = false;
-                this.enableZoneSystem.setUpgradeEnabled(false);
-                objects.Dispose();
-            })));
+                if (isNetToolAndRoadPrefab.x == true && isNetToolAndRoadPrefab.y == true) {
+                    activateModUI = true;
+                } else {
+                    deactivateModUI = true;
+                }
+            // } else {
+            //     deactivateModUI = true;
+            // }
+        }
+
+        protected override void OnUpdate()
+        {
+            base.OnUpdate();
+
+            if (activateModUI) {
+                Console.WriteLine("Activating Mod UI.");
+
+                // unset the trigger
+                activateModUI = false;
+
+                if (!modUIVisible) {
+                    // do trigger processing
+                    this.enableZoneSystem.setUpgradeEnabled(true);
+                    
+                    // setup pipe from game to UI and make mod visible
+                    visible = new GetterValueBinding<bool>(this.kGroup, "visible", () => modUIVisible);
+                    
+                    if (toUIBindings.Count == 0) {
+                        this.toUIBindings.Add(visible);
+                        this.toUIBindings.Add(new GetterValueBinding<string>(this.kGroup, "zoning_mode", () => enableZoneSystem.zoningMode.ToString()));
+                        this.toUIBindings.Add(new GetterValueBinding<bool>(this.kGroup, "upgrade_enabled", () => enableZoneSystem.upgradeEnabled));
+                        foreach(IUpdateBinding binding in toUIBindings) {
+                            this.AddUpdateBinding(binding);
+                            binding.Update();
+                        }
+                    }
+                    modUIVisible = true;
+                    // visible.Update();
+
+                    // setup pipe from UI to game
+                    if (fromUIBindings.Count == 0) {
+                        this.fromUIBindings.Add(new TriggerBinding<string>(this.kGroup, "zoning_mode_update", zoningMode => {
+                            Console.WriteLine($"Zoning mode updated to ${zoningMode}.");
+                                this.enableZoneSystem.setZoningMode(zoningMode);
+                            })
+                        );
+                        this.fromUIBindings.Add(new TriggerBinding<bool>(this.kGroup, "upgrade_enabled", upgrade_enabled => {
+                            Console.WriteLine($"Upgrade Enabled updated to ${upgrade_enabled}.");
+                                this.enableZoneSystem.setUpgradeEnabled(upgrade_enabled);
+                            })
+                        );
+
+                        foreach(IBinding binding in fromUIBindings) {
+                            this.AddBinding(binding);
+                        }
+                    }            
+
+                    return;
+                }
+            }
+                
+            if (deactivateModUI) {
+                Console.WriteLine("Deactivating Mod UI.");
+
+                // Unset trigger
+                deactivateModUI = false;
+
+                if (modUIVisible) {
+
+                    modUIVisible = false;
+                    // update UI to hid UI
+                    // visible.Update();
+
+                    // // remove bindings if the UI is not visible
+                    // foreach(IBinding binding in fromUIBindings) {
+                    //     GameManager.instance.userInterface.bindings.RemoveBinding(binding);
+                    // }
+
+                    // foreach(IUpdateBinding binding in toUIBindings) {
+                    //     GameManager.instance.userInterface.bindings.RemoveBinding(binding);
+                    // }
+
+                    // Disable mod upgrade
+                    this.enableZoneSystem.setUpgradeEnabled(false);
+
+                    // toUIBindings.Clear();
+                    // fromUIBindings.Clear();
+
+                    return;
+                }
+            }
         }
     }
 }

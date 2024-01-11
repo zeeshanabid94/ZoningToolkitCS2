@@ -3159,9 +3159,9 @@
           if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== "undefined" && typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart === "function") {
             __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
           }
-          var React3 = require_react();
+          var React2 = require_react();
           var Scheduler = require_scheduler();
-          var ReactSharedInternals = React3.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+          var ReactSharedInternals = React2.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
           var suppressWarning = false;
           function setSuppressWarning(newSuppressWarning) {
             {
@@ -4766,7 +4766,7 @@
             {
               if (props.value == null) {
                 if (typeof props.children === "object" && props.children !== null) {
-                  React3.Children.forEach(props.children, function(child) {
+                  React2.Children.forEach(props.children, function(child) {
                     if (child == null) {
                       return;
                     }
@@ -13213,7 +13213,7 @@
             }
           }
           var fakeInternalInstance = {};
-          var emptyRefsObject = new React3.Component().refs;
+          var emptyRefsObject = new React2.Component().refs;
           var didWarnAboutStateAssignmentForComponent;
           var didWarnAboutUninitializedState;
           var didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate;
@@ -24762,7 +24762,7 @@
         value: true
       });
       exports.default = void 0;
-      var React3 = _interopRequireWildcard(require_react());
+      var React2 = _interopRequireWildcard(require_react());
       var _propTypes = _interopRequireDefault(require_prop_types());
       var _reactDom = _interopRequireDefault(require_react_dom());
       var _domFns = require_domFns();
@@ -24848,7 +24848,7 @@
         }
       };
       var dragEventFor = eventsFor.mouse;
-      var DraggableCore = class extends React3.Component {
+      var DraggableCore = class extends React2.Component {
         constructor() {
           super(...arguments);
           _defineProperty(this, "dragging", false);
@@ -25012,7 +25012,7 @@
           return (_this$props = this.props) !== null && _this$props !== void 0 && _this$props.nodeRef ? (_this$props2 = this.props) === null || _this$props2 === void 0 || (_this$props2 = _this$props2.nodeRef) === null || _this$props2 === void 0 ? void 0 : _this$props2.current : _reactDom.default.findDOMNode(this);
         }
         render() {
-          return /* @__PURE__ */ React3.cloneElement(React3.Children.only(this.props.children), {
+          return /* @__PURE__ */ React2.cloneElement(React2.Children.only(this.props.children), {
             // Note: mouseMove handler is attached to document so it will still function
             // when the user drags quickly and leaves the bounds of the element.
             onMouseDown: this.onMouseDown,
@@ -25182,7 +25182,7 @@
         }
       });
       exports.default = void 0;
-      var React3 = _interopRequireWildcard(require_react());
+      var React2 = _interopRequireWildcard(require_react());
       var _propTypes = _interopRequireDefault(require_prop_types());
       var _reactDom = _interopRequireDefault(require_react_dom());
       var _clsx = _interopRequireDefault(require_clsx());
@@ -25271,7 +25271,7 @@
         }
         return (hint === "string" ? String : Number)(input);
       }
-      var Draggable2 = class extends React3.Component {
+      var Draggable2 = class extends React2.Component {
         // React 16.3+
         // Arity (props, state)
         static getDerivedStateFromProps(_ref, _ref2) {
@@ -25437,11 +25437,11 @@
             [defaultClassNameDragging]: this.state.dragging,
             [defaultClassNameDragged]: this.state.dragged
           });
-          return /* @__PURE__ */ React3.createElement(_DraggableCore.default, _extends({}, draggableCoreProps, {
+          return /* @__PURE__ */ React2.createElement(_DraggableCore.default, _extends({}, draggableCoreProps, {
             onStart: this.onDragStart,
             onDrag: this.onDrag,
             onStop: this.onDragStop
-          }), /* @__PURE__ */ React3.cloneElement(React3.Children.only(children), {
+          }), /* @__PURE__ */ React2.cloneElement(React2.Children.only(children), {
             className,
             style: {
               ...children.props.style,
@@ -25591,11 +25591,9 @@
     }
   });
 
-  // src/index.jsx
-  var import_react2 = __toESM(require_react());
-
   // src/zoning-toolkit-panel.jsx
   var import_react = __toESM(require_react());
+  var import_react_draggable = __toESM(require_cjs());
   var ZoningToolkitPanel = class extends import_react.default.Component {
     constructor(props) {
       super(props);
@@ -25616,12 +25614,16 @@
         console.log(`Upgrade Enabled Toggled ${upgradeEnabled}`);
         this.setState({ isUpgradeEnabled: upgradeEnabled });
       });
+      this.unsub_visible = updateEventFromCSharp("zoning_adjuster_ui_namespace.visible", (visible) => {
+        console.log(`UI visibility changed to ${visible}`);
+        this.setState({ isVisible: visible });
+      });
       this.setState({ isVisible: true });
     }
     componentWillUnmount() {
       this.unsub();
-      this.unsub_enabled();
       this.unsub_upgrade_enabled();
+      this.unsub_visible();
     }
     selectZoningMode = (zoningMode) => {
       console.log(`Button clicked. Zoning mode ${zoningMode}`);
@@ -25653,13 +25655,23 @@
     }
     render() {
       const windowStyle = {
+        position: "absolute",
+        top: 100,
+        right: 100,
+        color: "white",
+        backgroundColor: "rgba(38, 56, 65, 1)",
+        // Light gray with 100% opacity
+        borderRadius: "10px",
+        // Rounded edges
         border: "none",
+        // Removing any border or outline
         padding: "20px",
         width: "auto",
         margin: "15px auto",
         textAlign: "center",
         transition: "box-shadow 0.3s ease-in-out",
-        pointerEvents: "auto"
+        pointerEvents: "auto",
+        display: this.state.isVisible === true ? "block" : "none"
       };
       const buttonStyle = {
         margin: "5px",
@@ -25700,13 +25712,13 @@
         flexDirection: "row"
       };
       const { isVisible } = this.state;
-      return /* @__PURE__ */ import_react.default.createElement(
+      return /* @__PURE__ */ import_react.default.createElement(import_react_draggable.default, { grid: [50, 50] }, /* @__PURE__ */ import_react.default.createElement(
         "div",
         {
           style: windowStyle
         },
         /* @__PURE__ */ import_react.default.createElement("div", null, this.renderZoningModeButton("Left", leftButtonStyle), this.renderZoningModeButton("Right", rightButtonStyle), this.renderZoningModeButton("Default", defaultButtonStyle), this.renderZoningModeButton("None", noneButtonStyle))
-      );
+      ));
     }
   };
   function updateEventFromCSharp(event, callback) {
@@ -25728,27 +25740,11 @@
   var zoning_toolkit_panel_default = ZoningToolkitPanel;
 
   // src/index.jsx
-  var import_react_draggable = __toESM(require_cjs());
-  var ZoningToolkitUI = () => {
-    const style = {
-      position: "absolute",
-      top: 100,
-      right: 100,
-      color: "white",
-      backgroundColor: "rgba(38, 56, 65, 1)",
-      // Light gray with 100% opacity
-      borderRadius: "10px",
-      // Rounded edges
-      border: "none"
-      // Removing any border or outline
-    };
-    return /* @__PURE__ */ import_react2.default.createElement(import_react_draggable.default, { grid: [50, 50] }, /* @__PURE__ */ import_react2.default.createElement("div", { id: "UI", style }, /* @__PURE__ */ import_react2.default.createElement(zoning_toolkit_panel_default, null)));
-  };
   window._$hookui.registerPanel({
     id: "zoning.adjuster",
     name: "Zoning Adjuster",
     icon: "Media/Game/Icons/Zones.svg",
-    component: ZoningToolkitUI
+    component: zoning_toolkit_panel_default
   });
 })();
 /*! Bundled license information:

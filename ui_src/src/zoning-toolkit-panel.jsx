@@ -1,4 +1,5 @@
 ﻿import React from 'react';
+import Draggable from 'react-draggable';
 
 class ZoningToolkitPanel extends React.Component {
     constructor(props) {
@@ -21,13 +22,17 @@ class ZoningToolkitPanel extends React.Component {
             console.log(`Upgrade Enabled Toggled ${upgradeEnabled}`);
             this.setState({ isUpgradeEnabled: upgradeEnabled})
         })
+        this.unsub_visible = updateEventFromCSharp('zoning_adjuster_ui_namespace.visible', (visible) => {
+            console.log(`UI visibility changed to ${visible}`);
+            this.setState({ isVisible: visible })
+        })
         this.setState({ isVisible: true })
     }
 
     componentWillUnmount() {
         this.unsub();
-        this.unsub_enabled();
         this.unsub_upgrade_enabled();
+        this.unsub_visible();
     }
 
     selectZoningMode = (zoningMode) => {
@@ -66,13 +71,20 @@ class ZoningToolkitPanel extends React.Component {
     render() {
         // Define the styles
         const windowStyle = {
-            border: 'none',
+            position: "absolute",
+            top: 100,
+            right: 100,
+            color: "white",
+            backgroundColor: "rgba(38, 56, 65, 1)", // Light gray with 100% opacity
+            borderRadius: "10px", // Rounded edges
+            border: "none", // Removing any border or outline
             padding: '20px',
             width: 'auto',
             margin: '15px auto',
             textAlign: 'center',
             transition: 'box-shadow 0.3s ease-in-out',
-            pointerEvents: 'auto'
+            pointerEvents: 'auto',
+            display: this.state.isVisible === true ? 'block' : 'none'
         };
 
         const buttonStyle = {
@@ -127,16 +139,18 @@ class ZoningToolkitPanel extends React.Component {
 
         // Apply the styles to the elements
         return (
-            <div 
-                style={windowStyle}
-            >
-                <div>
-                    {this.renderZoningModeButton("Left", leftButtonStyle)}
-                    {this.renderZoningModeButton("Right", rightButtonStyle)}
-                    {this.renderZoningModeButton("Default", defaultButtonStyle)}
-                    {this.renderZoningModeButton("None", noneButtonStyle)}
+            <Draggable grid={[50, 50]}>
+                <div 
+                    style={windowStyle}
+                >
+                    <div>
+                        {this.renderZoningModeButton("Left", leftButtonStyle)}
+                        {this.renderZoningModeButton("Right", rightButtonStyle)}
+                        {this.renderZoningModeButton("Default", defaultButtonStyle)}
+                        {this.renderZoningModeButton("None", noneButtonStyle)}
+                    </div>
                 </div>
-            </div>
+            </Draggable>
         );
     }
 }
