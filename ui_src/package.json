@@ -18,5 +18,8 @@
     "@babel/preset-env": "^7.23.5",
     "@babel/preset-react": "^7.23.3",
     "hookui-framework": "github:captain-of-coit/hookui-framework"
+  },
+  "dependencies": {
+    "react-draggable": "^4.4.6"
   }
 }

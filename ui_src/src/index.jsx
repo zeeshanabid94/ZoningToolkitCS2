@@ -1,5 +1,6 @@
 ﻿import React from 'react';
 import ZoningToolkitPanel from './zoning-toolkit-panel';
+import Draggable from 'react-draggable';
 
 const ZoningToolkitUI = () => {
     const style = {
@@ -7,13 +8,15 @@ const ZoningToolkitUI = () => {
         top: 100,
         right: 100,
         color: "white",
-        backgroundColor: "rgba(173, 216, 230, 0.75)", // Light blue with 75% opacity
+        backgroundColor: "rgba(38, 56, 65, 1)", // Light gray with 100% opacity
         borderRadius: "10px", // Rounded edges
         border: "none", // Removing any border or outline
     }
-    return <div id="UI" style={style}>
-        <ZoningToolkitPanel />
-    </div>
+    return <Draggable grid={[50, 50]}>
+        <div id="UI" style={style}>
+            <ZoningToolkitPanel />
+        </div>
+    </Draggable>
 }
 
 window._$hookui.registerPanel({

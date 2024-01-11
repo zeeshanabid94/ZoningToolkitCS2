@@ -75,7 +75,7 @@ class ZoningToolkitPanel extends React.Component {
     render() {
         // Define the styles
         const windowStyle = {
-            border: '1px solid #ccc',
+            border: 'none',
             padding: '20px',
             width: 'auto',
             margin: '15px auto',
