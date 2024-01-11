@@ -35,7 +35,6 @@ namespace ZonePlacementMod.Systems {
 
             this.AddUpdateBinding(new GetterValueBinding<string>(this.kGroup, "zoning_mode", () => enableZoneSystem.zoningMode.ToString()));
             this.AddUpdateBinding(new GetterValueBinding<bool>(this.kGroup, "upgrade_enabled", () => enableZoneSystem.upgradeEnabled));
-            this.AddUpdateBinding(new GetterValueBinding<bool>(this.kGroup, "apply_to_new_roads", () => enableZoneSystem.shouldApplyToNewRoads));
 
             this.AddBinding(new TriggerBinding<string>(this.kGroup, "zoning_mode_update", zoningMode => {
                 Console.WriteLine($"Zoning mode updated to ${zoningMode}.");
@@ -47,12 +46,6 @@ namespace ZonePlacementMod.Systems {
                 Console.WriteLine($"Upgrade Enabled updated to ${upgrade_enabled}.");
                 if (this.roadToolbarOpen) {
                     this.enableZoneSystem.setUpgradeEnabled(upgrade_enabled);
-                }
-            }));
-            this.AddBinding(new TriggerBinding<bool>(this.kGroup, "apply_to_new_roads", shouldApply => {
-                Console.WriteLine($"Should Apply to new Roads updated to ${shouldApply}.");
-                if (this.roadToolbarOpen) {
-                    this.enableZoneSystem.setShouldApplyToNewRoads(shouldApply);
                 }
             }));
             this.AddBinding(new TriggerBinding<Entity>(toolbarKGroup, "selectAssetMenu", (Action<Entity>) (assetMenu =>
@@ -77,7 +70,6 @@ namespace ZonePlacementMod.Systems {
 
                     if (expectedPrefabNames.Contains(prefabBase.name)) {
                         this.enableZoneSystem.setUpgradeEnabled(true);
-                        this.enableZoneSystem.setShouldApplyToNewRoads(true);
                         this.roadToolbarOpen = true;
                         objects.Dispose();
                         return;
@@ -86,7 +78,6 @@ namespace ZonePlacementMod.Systems {
 
                 this.roadToolbarOpen = false;
                 this.enableZoneSystem.setUpgradeEnabled(false);
-                this.enableZoneSystem.setShouldApplyToNewRoads(false);
                 objects.Dispose();
             })));
         }

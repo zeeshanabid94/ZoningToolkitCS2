@@ -46,7 +46,6 @@ namespace ZonePlacementMod.Systems
         private ToolRaycastSystem raycastSystem;
         public ZoningMode zoningMode;
         public bool upgradeEnabled;
-        public bool shouldApplyToNewRoads;
 
         protected override void OnCreate() {
             base.OnCreate();
@@ -88,7 +87,6 @@ namespace ZonePlacementMod.Systems
 
             setZoningMode("Default");
             setUpgradeEnabled(false);
-            setShouldApplyToNewRoads(false);
             this.RequireForUpdate(this.updatedEntityQuery);
         }
         
@@ -208,10 +206,6 @@ namespace ZonePlacementMod.Systems
 
         public void setUpgradeEnabled(bool enabled) {
             this.upgradeEnabled = enabled;
-        }
-
-        public void setShouldApplyToNewRoads(bool value) {
-            this.shouldApplyToNewRoads = value;
         }
 
         public Vector2 GetTangent(Bezier4x2 curve, float t) {
