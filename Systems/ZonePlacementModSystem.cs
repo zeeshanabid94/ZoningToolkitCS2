@@ -274,9 +274,14 @@ namespace ZonePlacementMod.Systems
                             if (!appliedLookup.HasComponent(owner.m_Owner)) {
                                 if (zoningInfoComponentLookup.HasComponent(owner.m_Owner)) {
                                     entityZoningInfo = this.zoningInfoComponentLookup[owner.m_Owner];
+                                } else {
+                                    // For backwards compatibility
+                                    entityZoningInfo = new ZoningInfo() {
+                                        zoningMode = ZoningMode.Default
+                                    };
                                 }
-                            }
-                            if (createdLookup.HasComponent(owner.m_Owner)) {
+                            } else {
+                                if (createdLookup.HasComponent(owner.m_Owner)) {
                                     Entity startDeletedEntity;
                                     Entity endDeletedEntity;
                                     bool isStartPresent = entitiesByStartPoint.TryGetValue(curve.m_Bezier.a.xz, out startDeletedEntity);
@@ -316,11 +321,12 @@ namespace ZonePlacementMod.Systems
                                             entityZoningInfo = zoningInfoComponentLookup[startDeletedEntity];
                                         }
                                     } 
-                            } else if (updateLookup.HasComponent(owner.m_Owner)) {
-                                if (upgradeEnabled == false || (upgradedEntity != null && upgradedEntity != owner.m_Owner)) {
-                                    Console.WriteLine("Upgraded entity doesn't matches owner entity. Setting zoning info from owner...");
-                                    if (zoningInfoComponentLookup.HasComponent(owner.m_Owner)) {
-                                        entityZoningInfo = this.zoningInfoComponentLookup[owner.m_Owner];
+                                } else if (updateLookup.HasComponent(owner.m_Owner)) {
+                                    if (upgradeEnabled == false || (upgradedEntity != null && upgradedEntity != owner.m_Owner)) {
+                                        Console.WriteLine("Upgraded entity doesn't matches owner entity. Setting zoning info from owner...");
+                                        if (zoningInfoComponentLookup.HasComponent(owner.m_Owner)) {
+                                            entityZoningInfo = this.zoningInfoComponentLookup[owner.m_Owner];
+                                        }
                                     }
                                 }
                             }
