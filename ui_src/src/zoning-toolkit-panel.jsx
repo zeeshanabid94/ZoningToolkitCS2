@@ -50,6 +50,7 @@ class ZoningToolkitPanel extends React.Component {
             <button 
                 style={style}
                 onClick={() => this.selectZoningMode(zoningMode)}
+                id={zoningMode}
             >
             {zoningMode}
             </button>
@@ -61,6 +62,7 @@ class ZoningToolkitPanel extends React.Component {
             <button 
                 style={buttonStyle}
                 onClick={onClick}
+                id={buttonLabel}
             >
             {buttonLabel}
             </button>
@@ -139,11 +141,12 @@ class ZoningToolkitPanel extends React.Component {
 
         // Apply the styles to the elements
         return (
-            <Draggable grid={[50, 50]}>
+            <Draggable grid={[50, 50]} id="ZoningToolkitPanel">
                 <div 
                     style={windowStyle}
+                    id="inner-div"
                 >
-                    <div>
+                    <div id="button-list">
                         {this.renderZoningModeButton("Left", leftButtonStyle)}
                         {this.renderZoningModeButton("Right", rightButtonStyle)}
                         {this.renderZoningModeButton("Default", defaultButtonStyle)}
@@ -156,7 +159,7 @@ class ZoningToolkitPanel extends React.Component {
 }
 
 function updateEventFromCSharp(event, callback) {
-    console.log("Updating.");
+    console.log("Subscribing to update events from game. Event" + event);
     const updateEvent = event + ".update"
     const subscribeEvent = event + ".subscribe"
     const unsubscribeEvent = event + ".unsubscribe"
