@@ -1,39 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using Colossal.Entities;
 using Colossal.UI.Binding;
 using Game.Prefabs;
-using Game.SceneFlow;
 using Game.Tools;
 using Game.UI;
-using Unity.Collections;
 using Unity.Entities;
-using Unity.Mathematics;
-using ZoningToolkitMod.Utilties;
 
 namespace ZonePlacementMod.Systems {
     class ZonePlacementModUISystem: UISystemBase {
-        private static readonly HashSet<String> expectedPrefabNames = new HashSet<String> {
-            "RoadsHighways",
-            "RoadsLargeRoads",
-            "RoadsMediumRoads",
-            "RoadsServices",
-            "RoadsSmallRoads",
-            "RoadsIntersections",
-            "RoadsParking",
-            "RoadsRoundabouts"
-        };
         private string kGroup = "zoning_adjuster_ui_namespace";
-        private string toolbarKGroup = "toolbar";
         private EnableZoneSystem enableZoneSystem;
-        private PrefabSystem prefabSystem;
-
         private bool activateModUI = false;
         private bool deactivateModUI = false;
         private bool modUIVisible = false;
-        private bool2 isNetToolAndRoadPrefab = new bool2(false, false);
-        GetterValueBinding<bool> visible;
-
+        private GetterValueBinding<bool> visible;
         private List<IUpdateBinding> toUIBindings;
         private List<IBinding> fromUIBindings;
         private ToolSystem toolSystem;
@@ -44,7 +24,6 @@ namespace ZonePlacementMod.Systems {
 
             this.enableZoneSystem = World.GetExistingSystemManaged<EnableZoneSystem>();
             this.toolSystem = World.GetOrCreateSystemManaged<ToolSystem>();
-            this.prefabSystem = World.GetExistingSystemManaged<PrefabSystem>();
             this.toUIBindings = new List<IUpdateBinding>();
             this.fromUIBindings = new List<IBinding>();
 
@@ -56,13 +35,21 @@ namespace ZonePlacementMod.Systems {
             Console.WriteLine("Tool changed!");
 
             if (tool is NetToolSystem) {
-                isNetToolAndRoadPrefab.y = true;
-            } else {
-                isNetToolAndRoadPrefab.y = false;
-            }
+                if (tool.GetPrefab() is RoadPrefab) {
+                    Console.WriteLine("Prefab is RoadPrefab!");
+                    RoadPrefab roadPrefab = (RoadPrefab) tool.GetPrefab();
+                    Console.WriteLine($"Road prefab information.");
+                    Console.WriteLine($"Road Type {roadPrefab.m_RoadType}.");
+                    Console.WriteLine($"Road Zone Block {roadPrefab.m_ZoneBlock}.");
 
-            if (isNetToolAndRoadPrefab.x == true && isNetToolAndRoadPrefab.y == true) {
-                activateModUI = true;
+                    if (roadPrefab.m_ZoneBlock != null) {
+                        activateModUI = true;
+                    } else {
+                        deactivateModUI = true;
+                    }
+                } else {
+                    deactivateModUI = true;
+                }
             } else {
                 deactivateModUI = true;
             }
@@ -71,39 +58,22 @@ namespace ZonePlacementMod.Systems {
         private void OnPrefabChanged(PrefabBase prefabBase) {
             Console.WriteLine("Prefab changed!");
 
-            // if (toolSystem.activeTool is NetToolSystem) {
-            //     NetToolSystem netToolSystem = (NetToolSystem) toolSystem.activeTool;
-            
-                if (toolSystem.activePrefab is RoadPrefab) {
-                    Console.WriteLine("Prefab is RoadPrefab!");
-                    RoadPrefab roadPrefab = (RoadPrefab) toolSystem.activePrefab;
-                    Console.WriteLine($"Road prefab information.");
-                    Console.WriteLine($"Road Type {roadPrefab.m_RoadType}.");
-                    Console.WriteLine($"Road Zone Block {roadPrefab.m_ZoneBlock}.");
+            if (prefabBase is RoadPrefab) {
+                Console.WriteLine("Prefab is RoadPrefab!");
+                RoadPrefab roadPrefab = (RoadPrefab) prefabBase;
+                Console.WriteLine($"Road prefab information.");
+                Console.WriteLine($"Road Type {roadPrefab.m_RoadType}.");
+                Console.WriteLine($"Road Zone Block {roadPrefab.m_ZoneBlock}.");
 
-                    // HashSet<ComponentType> componentSet = new HashSet<ComponentType>();
-                    // roadPrefab.GetPrefabComponents(componentSet);
-
-                    // Console.WriteLine($"Component type set contains RoadData {componentSet.Contains(ComponentType.ReadWrite<RoadData>())}");
-
-                    if (roadPrefab.m_ZoneBlock != null) {
-                        isNetToolAndRoadPrefab.x = true;
-                    } else {
-                        isNetToolAndRoadPrefab.x = false;
-                    }
-                } else {
-                    Console.WriteLine("Prefab is not RoadPrefab!");
-                    isNetToolAndRoadPrefab.x = false;
-                }
-
-                if (isNetToolAndRoadPrefab.x == true && isNetToolAndRoadPrefab.y == true) {
+                if (roadPrefab.m_ZoneBlock != null) {
                     activateModUI = true;
                 } else {
                     deactivateModUI = true;
                 }
-            // } else {
-            //     deactivateModUI = true;
-            // }
+            } else {
+                Console.WriteLine("Prefab is not RoadPrefab!");
+                deactivateModUI = true;
+            }
         }
 
         protected override void OnUpdate()
@@ -133,7 +103,7 @@ namespace ZonePlacementMod.Systems {
                         }
                     }
                     modUIVisible = true;
-                    // visible.Update();
+                    visible.Update();
 
                     // setup pipe from UI to game
                     if (fromUIBindings.Count == 0) {
@@ -167,22 +137,10 @@ namespace ZonePlacementMod.Systems {
 
                     modUIVisible = false;
                     // update UI to hid UI
-                    // visible.Update();
-
-                    // // remove bindings if the UI is not visible
-                    // foreach(IBinding binding in fromUIBindings) {
-                    //     GameManager.instance.userInterface.bindings.RemoveBinding(binding);
-                    // }
-
-                    // foreach(IUpdateBinding binding in toUIBindings) {
-                    //     GameManager.instance.userInterface.bindings.RemoveBinding(binding);
-                    // }
+                    visible.Update();
 
                     // Disable mod upgrade
                     this.enableZoneSystem.setUpgradeEnabled(false);
-
-                    // toUIBindings.Clear();
-                    // fromUIBindings.Clear();
 
                     return;
                 }
