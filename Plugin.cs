@@ -10,6 +10,8 @@ using System.Text;
 using UnityEngine;
 using ZoningToolkitMod;
 using HookUILib.Core;
+using Game.Common;
+using Game.Modding;
 
 #if BEPINEX_V6
     using BepInEx.Unity.Mono;
@@ -30,9 +32,13 @@ namespace ZoningToolkitModPlugin
     [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
     public class Plugin : BaseUnityPlugin
     {
+        private IMod mod;
         private void Awake()
         {
             Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
+            mod = new ZoningToolkitMod.Mod.ZoningToolkitMod();
+
+            mod.OnLoad();
 
             var harmony = Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), MyPluginInfo.PLUGIN_GUID + "_Cities2Harmony");
             var patchedMethods = harmony.GetPatchedMethods().ToArray();

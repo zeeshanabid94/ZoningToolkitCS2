@@ -25612,10 +25612,6 @@
         console.log(`Zoning mode fetched ${zoningMode}`);
         this.setState({ zoningMode });
       });
-      this.unsub_enabled = updateEventFromCSharp("zoning_adjuster_ui_namespace.apply_to_new_roads", (apply_to_new_roads) => {
-        console.log(`Enabled Toggled ${apply_to_new_roads}`);
-        this.setState({ isEnabled: apply_to_new_roads });
-      });
       this.unsub_upgrade_enabled = updateEventFromCSharp("zoning_adjuster_ui_namespace.upgrade_enabled", (upgradeEnabled) => {
         console.log(`Upgrade Enabled Toggled ${upgradeEnabled}`);
         this.setState({ isUpgradeEnabled: upgradeEnabled });
@@ -25630,10 +25626,6 @@
     selectZoningMode = (zoningMode) => {
       console.log(`Button clicked. Zoning mode ${zoningMode}`);
       sendDataToCSharp("zoning_adjuster_ui_namespace", "zoning_mode_update", zoningMode);
-    };
-    enabledButtonClicked = () => {
-      console.log(`Button clicked. Enabled ${this.state.isEnabled}`);
-      sendDataToCSharp("zoning_adjuster_ui_namespace", "apply_to_new_roads", !this.state.isEnabled);
     };
     upgradeEnabledButtonClicked = () => {
       console.log(`Button clicked. Upgrade Enabled ${this.state.isUpgradeEnabled}`);
